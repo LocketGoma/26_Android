@@ -1,16 +1,23 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
 }
 
 android {
     namespace = "kr.ac.lecture.mobilegame"
-    compileSdk = 35
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 0
+        }
+    }
 
     defaultConfig {
         applicationId = "kr.ac.lecture.mobilegame"
-        minSdk = 24
-        targetSdk = 35
+        minSdk {
+            version = release(24)
+        }
+        targetSdk {
+            version = release(37)
+        }
         versionCode = 1
         versionName = "0.1.0"
 
@@ -33,10 +40,11 @@ android {
     }
 
     compileOptions {
+        // Gradle 실행 JDK와 앱 코드의 Java 언어/바이트코드 수준은 별개입니다.
+        // Java/Kotlin 코드는 17을 대상으로 컴파일된 뒤 Android Build Tools가 DEX로 변환합니다.
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions { jvmTarget = "17" }
 }
 
 dependencies {

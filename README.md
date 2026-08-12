@@ -2,7 +2,7 @@
 
 대학 2학년이 **게임이 왜 이런 구조로 동작하는지** 직접 확인하는 Android Studio용 Kotlin + OpenGL ES 3.0 프로젝트입니다. Unity/Unreal 같은 상용 엔진 없이 Android의 생명주기, 입력, Game Loop, Update, Render, Collision의 연결을 코드로 드러내는 것이 목표입니다.
 
-반복해서 필요한 초기 코드를 흔히 **보일러플레이트**라고도 부르지만, 이 강의와 프로젝트에서는 이후 모두 **기반 시스템**이라는 표현을 사용합니다.
+반복해서 필요한 초기 코드를 흔히 **보일러플레이트**라고도 부릅니다. 엄밀히 말하면 보일러플레이트는 기반 시스템 자체보다 그것을 구성하고 연결하는 반복 코드에 가깝기 때문에 두 용어가 완전히 같지는 않습니다. 다만 이 강의와 프로젝트에서는 처음 한 번만 이 차이를 소개하고, 이후 공통 기반 기능을 이해하기 쉬운 **기반 시스템**이라는 표현으로 통일합니다.
 
 현재 결과물은 완성 게임이 아니라 드래곤플라이트/1945 스타일 세로 자동 슈팅으로 확장할 수 있는 **구조 초안**입니다. 색 사각형만으로도 터치 이동, 자동 발사, 적 생성, AABB 충돌, 점수와 GameOver 흐름을 실행할 수 있습니다.
 
@@ -69,7 +69,14 @@ kr.ac.lecture.mobilegame
 - Player 4×4, 탄환/폭발 4×4, Enemy 4×2 오리지널 투명 Sprite Sheet 샘플
 - Player 피격/격추 4×2와 Enemy 피격/격추 4×4 별도 Texture 샘플
 
-Texture 로더는 준비되어 있지만 기본 장면은 리소스 없이 실행되도록 색 사각형을 사용합니다. OBB는 축 투영과 회전 행렬이 필요하므로 필수 범위에서 구현하지 않고 `CollisionSystem`의 선택 심화 TODO로 남겼습니다. 고정 Physics Tick, 멀티터치, 텍스트/폰트 UI, 오디오, 저장, NDK(C++)도 후속 확장 항목입니다.
+기본 장면은 제공된 Sprite Sheet를 `ResourceManager`로 읽어 Texture와 Animation 흐름을 보여 줍니다. 각 게임 객체에는 Texture가 없을 때 색 사각형으로 대신 그리는 경로도 남겨 두어 초기 렌더링 실습에 사용할 수 있습니다. OBB는 축 투영과 회전 행렬이 필요하므로 필수 범위에서 구현하지 않고 `CollisionSystem`의 선택 심화 TODO로 남겼습니다. 고정 Physics Tick, 멀티터치, 텍스트/폰트 UI, 오디오, 저장, NDK(C++)도 후속 확장 항목입니다.
+
+## FPS, Tick, DeltaTime, Physics Tick
+
+- **FPS**는 1초 동안 화면을 몇 번 출력했는지 나타냅니다.
+- **Tick**은 게임 상태를 한 번 갱신하는 단위이며 FPS와 같을 수도 있지만 같은 개념은 아닙니다.
+- **DeltaTime**은 이전 갱신 이후 흐른 시간입니다. 이 프로젝트의 이동 속도는 `speed * deltaTime`으로 계산합니다.
+- **Physics Tick**은 물리 계산을 일정한 간격으로 수행하는 고정 갱신입니다. Unity의 `FixedUpdate`, Unreal의 Physics Tick/Substepping과 연결되는 개념이지만, 이 강의에서는 차이만 다루고 물리 엔진 자체는 구현하지 않습니다.
 
 ## 4회 이론 강의와 코드 연결
 
@@ -178,14 +185,76 @@ Kotlin에서는 간단한 조합에 문자열 템플릿(`"score=$score"`)을 우
 
 ## 실행 방법
 
-1. Android Studio에서 이 폴더를 엽니다.
-2. JDK 17과 Android SDK 35가 설치되어 있는지 확인합니다.
+1. 최신 안정판 Android Studio(현재 Quail 3 / 2026.1.3)에서 이 폴더를 엽니다. AGP 9.3을 지원하는 최소 버전은 Quail 2 / 2026.1.2입니다.
+2. 최신 안정판 JDK(현재 JDK 26), Android SDK Platform 37.0, SDK Build Tools 36.0.0과 최신 SDK Tools를 설치합니다. 다른 Build Tools 버전이 함께 설치되어 있어도 괜찮습니다. 프로젝트에 `buildToolsVersion`을 직접 고정하지 않으면 AGP가 호환 버전을 선택합니다.
 3. Gradle Sync를 실행합니다.
 4. OpenGL ES 3.0을 지원하는 에뮬레이터 또는 Android 7.0(API 24) 이상 기기를 선택합니다.
 5. `app` 실행 구성을 실행합니다.
 6. 화면을 누르거나 드래그하면 청록색 Player가 이동하고 자동으로 탄환을 발사합니다.
 
-명령행에서는 Windows 기준 `gradlew.bat test`와 `gradlew.bat assembleDebug`로 확인할 수 있습니다. 센서 실습은 실제 기기를 권장합니다.
+명령행에서는 프로젝트 루트에서 다음 명령으로 확인할 수 있습니다.
+
+```bash
+# macOS / Linux
+./gradlew test assembleDebug
+
+# Windows
+gradlew.bat test assembleDebug
+```
+
+macOS에서 `permission denied: ./gradlew`가 나오면 저장소에 실행 권한이 반영되어 있는지 확인합니다. 센서 실습은 실제 기기를 권장합니다.
+
+현재 프로젝트 빌드 조합은 Android Gradle Plugin 9.3.0과 그 공식 기본 조합인 Gradle 9.5.0입니다. Gradle 9.5.0은 JDK 17부터 26까지 실행할 수 있으며, 이 강의의 현재 설치 기준은 JDK 26입니다. AGP 9부터 Kotlin 지원이 내장되므로 별도의 `org.jetbrains.kotlin.android` 플러그인을 적용하지 않습니다. Gradle 실행 JDK와 앱 코드의 Java/Kotlin JVM Target은 별개입니다. 앱 코드는 JVM Target 17로 컴파일된 뒤 Android Build Tools가 DEX로 변환하며, 테스트 기기의 최소 Android 버전은 JVM Target이 아니라 `minSdk`와 사용 API에 의해 결정됩니다. 학생은 Gradle 버전을 따로 설치하지 않고 저장소의 Gradle Wrapper를 사용합니다.
+
+각 도구의 숫자가 가장 큰 버전을 무조건 섞는 것이 아니라, 최신 안정판 Android Studio가 공식 지원하는 AGP와 그 AGP가 요구하는 Gradle 조합을 사용합니다. 현재 Quail 3이 지원하는 AGP 상한은 9.3이므로 이 프로젝트도 AGP 9.3을 사용합니다.
+
+## SDK 또는 테스트 기기 버전이 다를 때
+
+먼저 다음 네 가지 버전을 구분합니다.
+
+| 항목 | 의미 | 이 프로젝트 |
+|---|---|---|
+| `compileSdk` | 코드를 빌드할 때 사용할 Android API. 개발 PC에 해당 SDK Platform이 설치되어 있어야 함 | 37.0 |
+| `targetSdk` | 앱이 테스트·대응한다고 선언한 API 수준. 해당 수준의 플랫폼 동작 변경을 적용하는 기준이며 테스트 기기의 최소 버전은 아님 | 37 |
+| `minSdk` | Android OS 버전 관점에서 앱 설치를 허용할 최소 API 수준 | 24 |
+| 테스트 기기 API | 실제 기기 또는 에뮬레이터가 실행하는 Android API 수준 | 24 이상 |
+
+예를 들어 `targetSdk`가 37이어도 API 34 기기에서 실행할 수 있습니다. OS 버전 호환 범위의 하한은 `minSdk`이 결정합니다. 다만 기기 호환성은 API 수준만으로 끝나지 않습니다. 이 프로젝트는 Manifest에서 OpenGL ES 3.0을 필수로 선언하므로 **API 24 이상이면서 OpenGL ES 3.0을 지원하는 기기**가 필요합니다. 가속도계와 자이로스코프는 선택 기능으로 선언되어 없어도 기본 터치 게임은 실행할 수 있습니다.
+
+`compileSdk`는 minor API를 포함할 수 있어 `37.0`으로 표기하지만, Android의 `minSdk`와 `targetSdk`는 정수 API 수준만 사용하므로 각각 `24`, `37`로 표기합니다. 서로 다른 표기는 의도된 것입니다.
+
+### 상황별 대응
+
+1. **Gradle Sync에서 `android-37.0`을 찾을 수 없다고 나오는 경우**
+   - Android Studio의 **Tools → SDK Manager → SDK Platforms**에서 Android API 37.0을 설치합니다.
+   - 수업 프로젝트에서는 각자 `compileSdk`를 낮추기보다, 강의에서 지정한 동일 SDK를 설치하는 방법을 우선합니다.
+
+2. **SDK Build Tools가 없다는 오류가 나오는 경우**
+   - **Tools → SDK Manager → SDK Tools → Show Package Details**에서 AGP 9.3의 공식 기본 버전인 Build Tools 36.0.0을 설치합니다.
+   - AGP가 호환 버전을 자동 선택하므로 특별한 이유가 없다면 `buildToolsVersion`을 프로젝트에 직접 고정하지 않습니다.
+
+3. **기기가 호환되지 않아 앱을 설치할 수 없는 경우**
+   - 기기의 Android API가 `minSdk` 24 이상인지 확인합니다.
+   - 기기가 OpenGL ES 3.0을 지원하는지도 확인합니다. 센서 유무는 설치 조건이 아닙니다.
+   - 가장 안전한 해결책은 **Device Manager**에서 API 24 이상이며 OpenGL ES 3.0을 사용하는 에뮬레이터를 만들거나 조건을 만족하는 실제 기기를 사용하는 것입니다.
+   - 오래된 기기를 반드시 사용해야 한다면 `app/build.gradle.kts`의 `minSdk`를 낮출 수 있지만, 사용 중인 모든 Android API가 그 버전에서도 동작하는지 코드와 실행 결과를 함께 확인해야 합니다.
+
+4. **설치된 SDK 버전에 맞춰 프로젝트를 임시로 조정해야 하는 경우**
+   - 우선 프로젝트 설정을 낮추지 말고 SDK Manager에서 프로젝트가 요구하는 SDK Platform을 설치합니다.
+   - 구형 테스트 기기 때문에 `compileSdk`나 `targetSdk`를 낮출 필요는 없습니다. 기기 OS 지원 범위는 `minSdk`로 결정합니다.
+   - 요구 SDK를 설치할 수 없는 특별한 경우에만 `app/build.gradle.kts`의 `compileSdk`를 조정합니다. `targetSdk`는 `compileSdk`보다 높을 수 없으므로 함께 낮춰야 할 수도 있지만, 이는 플랫폼 동작 정책을 바꾸는 변경이므로 단순한 로컬 설정 변경으로 취급하지 않습니다.
+   - 변경 후 **Sync Project with Gradle Files**를 실행합니다.
+   - SDK 기준 변경은 강사가 저장소에서 한 번 결정하고 전체 학생에게 동일하게 배포합니다. 개인별 임시 변경은 Git에 커밋하지 않습니다.
+
+`local.properties`의 `sdk.dir`은 각 PC의 Android SDK **설치 경로**만 나타냅니다. SDK 버전을 맞추기 위해 이 파일을 공유하거나 Git에 커밋하지 않습니다.
+
+버전 판단에는 다음 공식 문서를 기준으로 사용합니다.
+
+- [Android Studio와 AGP 호환 범위](https://developer.android.com/studio/releases)
+- [Android Gradle Plugin 9.3 호환 정보](https://developer.android.com/build/releases/agp-9-3-0-release-notes)
+- [Gradle과 Java 실행 버전 호환표](https://docs.gradle.org/current/userguide/compatibility.html)
+- [`minSdk`와 `targetSdk`의 정확한 의미](https://developer.android.com/guide/topics/manifest/uses-sdk-element)
+- [OpenGL ES 등 기기 기능 요구사항](https://developer.android.com/guide/topics/manifest/uses-feature-element)
 
 ## 다음 확장 체크리스트
 
