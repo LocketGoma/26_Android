@@ -68,6 +68,8 @@ kr.ac.lecture.mobilegame
 - SpriteAnimation, SceneManager, ResourceManager, HUD, ObjectPool의 학습용 최소 구조
 - Player 4×4, 탄환/폭발 4×4, Enemy 4×2 오리지널 투명 Sprite Sheet 샘플
 - Player 피격/격추 4×2와 Enemy 피격/격추 4×4 별도 Texture 샘플
+- 회색 바닥의 체력·폭탄 빈 케이스, 푸른 항공폭탄, 숫자 0~9, HEALTH/BOMB/SCORE를 담은 정적 UI 5×4 Texture
+- 체력 회복/폭탄 획득용 정적 필드 아이템 2×1 Texture와 별도 `ItemSpriteCatalog`
 
 Texture 로더는 준비되어 있지만 기본 장면은 리소스 없이 실행되도록 색 사각형을 사용합니다. OBB는 축 투영과 회전 행렬이 필요하므로 필수 범위에서 구현하지 않고 `CollisionSystem`의 선택 심화 TODO로 남겼습니다. 고정 Physics Tick, 멀티터치, 텍스트/폰트 UI, 오디오, 저장, NDK(C++)도 후속 확장 항목입니다.
 
