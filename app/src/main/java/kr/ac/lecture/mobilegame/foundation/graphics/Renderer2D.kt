@@ -7,7 +7,20 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
-/** 색 사각형과 Texture UV 영역을 그리는 최소 OpenGL ES 3.0 렌더러입니다. */
+/**
+ * Renderer2D에 전달할 RGBA 값을 담는 immutable data class입니다.
+ * Render 명령과 항상 함께 읽는 작은 데이터이므로 Renderer2D와 같은 파일에 둡니다.
+ */
+data class Color(val red: Float, val green: Float, val blue: Float, val alpha: Float = 1f) {
+    companion object {
+        val CYAN = Color(0.20f, 0.80f, 1.00f)
+        val RED = Color(1.00f, 0.25f, 0.30f)
+        val YELLOW = Color(1.00f, 0.85f, 0.20f)
+        val WHITE = Color(1f, 1f, 1f)
+    }
+}
+
+/** 색 사각형과 Texture UV 영역을 그리는 최소 OpenGL ES 3.0 Renderer입니다. */
 class Renderer2D {
     private var program = 0
     private val vertexShader = """

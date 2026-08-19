@@ -1,6 +1,19 @@
 package kr.ac.lecture.mobilegame.foundation.graphics.sprite
 
+import kr.ac.lecture.mobilegame.foundation.graphics.ResourceManager
 import kr.ac.lecture.mobilegame.foundation.graphics.Texture
+
+/**
+ * 전체 Texture 중 Sprite 하나가 사용할 UV 범위를 담는 immutable data class입니다.
+ * SpriteSheet가 계산해 반환하는 데이터이므로 같은 파일에서 계산식과 구조를 함께 확인합니다.
+ */
+data class SpriteRegion(
+    val texture: Texture,
+    val uLeft: Float,
+    val vTop: Float,
+    val uRight: Float,
+    val vBottom: Float,
+)
 
 /**
  * [강사 제공 기반 시스템]
@@ -37,4 +50,13 @@ class SpriteSheet(
     }
 
     fun row(row: Int): List<SpriteRegion> = (0 until columns).map { region(it, row) }
+}
+
+/**
+ * ResourceManager에서 Texture를 가져와 SpriteSheet를 생성하는 Loader입니다.
+ * 별도 상태나 수명 없이 생성만 보조하므로 관련 타입과 한 파일에 둡니다.
+ */
+class SpriteSheetLoader(private val resources: ResourceManager) {
+    fun load(resourceId: Int, columns: Int, rows: Int): SpriteSheet =
+        SpriteSheet(resources.texture(resourceId), columns, rows)
 }

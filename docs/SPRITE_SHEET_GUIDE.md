@@ -1,4 +1,4 @@
-# Sprite Sheet 로더와 실습 경계
+# Sprite Sheet Loader와 실습 경계
 
 ## 규칙
 
@@ -40,7 +40,7 @@
 
 ## 제공된 샘플 이미지
 
-모든 PNG는 투명 배경입니다. Player와 Effects는 4×4, Enemy는 4×2입니다. 로더의 시트 전체 칸 수에는 제한이 없습니다.
+모든 PNG는 투명 배경입니다. Player와 Effects는 4×4, Enemy는 4×2입니다. Loader가 처리할 수 있는 시트 전체 칸 수에는 제한이 없습니다.
 
 ### `player_sprites.png`
 

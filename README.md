@@ -58,10 +58,10 @@ kr.ac.lecture.mobilegame
 
 - OpenGL ES 3.0 컨텍스트와 셰이더를 이용한 삼각형 2개짜리 색 사각형 렌더링
 - 동일 셀 격자 Sprite Sheet의 자동 UV 분할과 Texture Sprite 렌더링
-- `GLSurfaceView.Renderer`의 생성/크기 변경/프레임 콜백
+- `GLSurfaceView.Renderer`의 생성/크기 변경/Frame Callback
 - DeltaTime 기반 Player, Enemy, Bullet 이동
 - UI Thread의 터치 입력을 불변 `InputSnapshot`으로 Render Thread에 전달
-- 가속도계와 자이로스코프 등록/해제 및 입력 스냅샷 연결
+- 가속도계와 자이로스코프 등록/해제 및 `InputSnapshot` 연결
 - Activity의 resume/pause를 게임과 센서에 연결
 - 경계가 닿는 경우를 충돌로 세지 않는 AABB 판정과 단위 테스트
 - 자동 발사, 시간 기반 적 생성/난이도 초안, 점수, GameOver
@@ -160,7 +160,7 @@ if (BuildConfig.DEBUG_BLOCK) {
 
 값은 `app/build.gradle.kts`의 `buildConfigField`에서 변경한 뒤 다시 빌드합니다. `ShooterScene.updateSampleRules()`가 실제 Sample Block 사용 예입니다.
 
-전역 디버그 함수는 `foundation.debug.DebugFunctions.kt`에 있습니다.
+top-level Debug Function은 `foundation.debug.DebugFunctions.kt`에 있습니다.
 
 ```kotlin
 debugPrint("Player position=$position")       // 화면 Toast + Logcat
@@ -177,7 +177,7 @@ Kotlin에서는 간단한 조합에 문자열 템플릿(`"score=$score"`)을 우
 
 | 이 프로젝트 | Unity | Unreal | 직접 구현하는 이유 |
 |---|---|---|---|
-| `GameRenderer.onDrawFrame` | Update/렌더 루프 | Tick/렌더 루프 | 프레임 반복의 실제 진입점을 확인 |
+| `GameRenderer.onDrawFrame` | Update/Render Loop | Tick/Render Loop | Frame 반복의 실제 진입점을 확인 |
 | `GameObject.update/draw` | MonoBehaviour | Actor/Component | 상태 갱신과 출력을 분리 |
 | `SceneManager` | SceneManager | Level 전환 | 화면 상태의 수명 관리 학습 |
 | `ResourceManager` | Resources/Addressables | Asset Manager | GPU 리소스 생성·해제 책임 확인 |

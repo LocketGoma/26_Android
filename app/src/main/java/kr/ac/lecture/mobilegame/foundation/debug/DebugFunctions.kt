@@ -27,7 +27,7 @@ internal object DebugRuntime {
 }
 
 /**
- * 문자열을 Logcat에 출력하고, 기본적으로 화면에도 Toast로 표시하는 전역 함수입니다.
+ * 문자열을 Logcat에 출력하고, 기본적으로 화면에도 Toast로 표시하는 top-level function입니다.
  * Kotlin에서는 `debugPrint("score=$score")` 같은 문자열 템플릿을 우선 사용하세요.
  * C/C++의 printf 형식이 익숙하다면
  * `debugPrint(String.format("score=%d, hp=%d", score, hp))`처럼 작성할 수 있습니다.
@@ -39,7 +39,7 @@ fun debugPrint(message: String, display: Boolean = true) {
     if (display) DebugRuntime.display(message)
 }
 
-/** Int, Float, 배열, null 등 범용 값을 읽기 좋은 문자열로 바꾸는 전역 함수입니다. */
+/** Int, Float, 배열, null 등 범용 값을 읽기 좋은 문자열로 바꾸는 top-level function입니다. */
 fun debugString(value: Any?): String = when (value) {
     null -> "null"
     is Array<*> -> value.contentDeepToString()
