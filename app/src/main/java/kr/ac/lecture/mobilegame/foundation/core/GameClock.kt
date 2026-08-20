@@ -1,6 +1,6 @@
 package kr.ac.lecture.mobilegame.foundation.core
 
-/** 프레임 간 시간을 초 단위로 계산합니다. 긴 일시정지 뒤의 급격한 이동은 clamp로 방지합니다. */
+/** Frame 사이의 DeltaTime을 초 단위로 계산합니다. 긴 일시정지 뒤의 급격한 이동은 최댓값 제한으로 방지합니다. */
 class GameClock(private val maximumDeltaSeconds: Float = 0.05f) {
     private var previousNanos = 0L
 

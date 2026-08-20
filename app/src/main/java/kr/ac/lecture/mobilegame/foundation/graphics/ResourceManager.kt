@@ -5,7 +5,13 @@ import android.graphics.BitmapFactory
 import android.opengl.GLES30
 import android.opengl.GLUtils
 
-/** OpenGL 리소스의 생성과 해제를 한곳에서 관리합니다(Unity Resources/Unreal Asset Manager 대응). */
+/**
+ * GPU Texture의 handle과 크기를 담는 immutable data class입니다.
+ * 생성·해제를 담당하는 ResourceManager와 함께 두어 Texture의 수명 주체를 바로 확인할 수 있게 합니다.
+ */
+data class Texture(val handle: Int, val width: Int, val height: Int)
+
+/** OpenGL Resource의 생성과 해제를 한곳에서 담당하는 Resource Manager입니다(Unity Resources/Unreal Asset Manager 대응). */
 class ResourceManager(private val context: Context) {
     private val textures = mutableMapOf<Int, Texture>()
 

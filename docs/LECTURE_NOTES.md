@@ -11,7 +11,7 @@
 ## 자주 생기는 오개념
 
 - FPS는 게임 속도가 아니다. 이동량이 DeltaTime에 비례해야 시간 기준 속도가 된다.
-- `onDrawFrame()`은 Android Main Thread에서 실행되는 일반 UI 콜백이 아니다.
+- `onDrawFrame()`은 Android Main Thread에서 실행되는 일반 UI Callback이 아니다.
 - Render가 위치를 바꾸지 않는다. Update가 상태를 바꾸고 Render가 읽는다.
 - Collision은 독립된 마법 기능이 아니라 Update 중 수행되는 계산이다.
 - Activity는 PC 프로그램의 `main()`과 완전히 같은 개념이 아니다. OS가 생명주기를 관리한다.
