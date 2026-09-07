@@ -10,12 +10,16 @@ import kr.ac.lecture.mobilegame.foundation.scene.Scene
 import kr.ac.lecture.mobilegame.foundation.ui.DebugHud
 import kr.ac.lecture.mobilegame.game.sprite.ShootingSprites
 import kotlin.random.Random
+import kr.ac.lecture.mobilegame.foundation.audio.SoundManager
 
 /**
  * 학생 수정 중심 영역: 드래곤플라이트/1945식 세로 자동 슈팅의 규칙 초안입니다.
  * AI가 생성·수정한 코드도 각 update/draw/충돌 규칙의 역할을 학생 본인이 설명할 수 있어야 합니다.
  */
-class ShooterScene(private val sprites: ShootingSprites? = null) : Scene {
+class ShooterScene(private val sprites: ShootingSprites? = null, private val sound: SoundManager? = null) : Scene {
+    // TODO(학생 실습): 효과음을 한 번 load/register하고 원하는 게임 이벤트에서 play하세요.
+    // 매 프레임 로드하지 않습니다. 채널 재등록 전 unregister가 필요합니다.
+    // GL Context 재생성으로 Scene이 새로 생겨도 sound는 Activity 수명 동안 유지됩니다.
     private val player = Player(sprites?.newPlayerIdleClip())
     private val bullets = mutableListOf<Bullet>()
     private val enemies = mutableListOf<Enemy>()

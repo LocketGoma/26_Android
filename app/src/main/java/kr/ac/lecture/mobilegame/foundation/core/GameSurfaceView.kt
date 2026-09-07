@@ -4,12 +4,14 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import kr.ac.lecture.mobilegame.foundation.input.InputController
 import kr.ac.lecture.mobilegame.foundation.input.SensorInput
+import kr.ac.lecture.mobilegame.foundation.audio.SoundManager
 
 /** Activity와 OpenGL Render Thread 사이를 연결하는 기반 시스템 View입니다. */
 class GameSurfaceView(context: Context) : GLSurfaceView(context) {
     private val input = InputController()
     private val sensorInput = SensorInput(context, input)
-    private val gameRenderer = GameRenderer(context, input)
+    private val sound = SoundManager(context)
+    private val gameRenderer = GameRenderer(context, input, sound)
 
     init {
         setEGLContextClientVersion(3)
@@ -21,17 +23,20 @@ class GameSurfaceView(context: Context) : GLSurfaceView(context) {
     fun onHostResume() {
         super.onResume()
         sensorInput.start()
+        sound.onHostResume()
         gameRenderer.resume()
     }
 
     fun onHostPause() {
         gameRenderer.pause()
+        sound.onHostPause()
         sensorInput.stop()
         super.onPause()
     }
 
     fun onHostDestroy() {
         sensorInput.stop()
+        sound.release()
         // OpenGL 객체 해제는 컨텍스트가 유효한 Render Thread에서 수행하도록 후속 실습에서 보강합니다.
     }
 }

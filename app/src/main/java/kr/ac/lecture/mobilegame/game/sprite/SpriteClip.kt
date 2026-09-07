@@ -2,6 +2,7 @@ package kr.ac.lecture.mobilegame.game.sprite
 
 import kr.ac.lecture.mobilegame.foundation.graphics.SpriteAnimation
 import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteRegion
+import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteAsset
 
 /**
  * [학생 실습/수정 영역]
@@ -10,8 +11,8 @@ import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteRegion
  */
 class SpriteClip(
     val frames: List<SpriteRegion>,
-    secondsPerFrame: Float,
-    looping: Boolean = true,
+    private val secondsPerFrame: Float,
+    private val looping: Boolean = true,
 ) {
     init {
         require(frames.size in 1..MAX_FRAMES) {
@@ -24,6 +25,14 @@ class SpriteClip(
 
     fun update(deltaTime: Float) = animation.update(deltaTime)
     fun reset() = animation.reset()
+
+    /** 기존 Catalog의 Frame/재생 설정을 재사용합니다. Component는 별도 재생 상태를 만듭니다. */
+    fun toAsset(name: String): SpriteAsset = SpriteAsset(
+        name, frames,
+        frames.first().widthPixels,
+        frames.first().heightPixels,
+        secondsPerFrame, looping,
+    )
 
     companion object {
         const val MAX_FRAMES = 8

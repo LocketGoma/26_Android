@@ -37,6 +37,8 @@ GameScene 내부 적 생성 타이머
 
 학생이 구분해야 할 좌표는 Android 터치 픽셀, 화면 픽셀, OpenGL NDC, 게임 월드, 텍스처 UV입니다. 현재 최소판은 NDC(-1~1)를 곧바로 월드 좌표로 사용합니다. 다음 리팩토링에서는 1080×1920 가상 해상도와 실제 화면 비율 보정을 도입합니다.
 
+Component 확장판도 월드 좌표는 유지합니다. `Viewport2D`가 실제 화면 Pixel Size를 NDC 크기로 변환하고 화면 비율을 반영한 Sprite 회전을 담당합니다. 이는 고정 가상 해상도나 Orthographic Camera를 도입한 것과는 다릅니다.
+
 입력은 다음 순서로 비교합니다.
 
 1. 손가락 위치를 따라가는 절대 이동
@@ -82,6 +84,8 @@ AABB 이후 선택 항목은 원 충돌, 충돌 Layer/Mask, 공간 분할입니�
 UI 후보는 점수, 체력, 시작 문구, GameOver, 재시작, 일시정지, 최고 점수입니다. 초반에는 Android View/TextView를 OpenGL 위에 겹치는 혼합 방식을 비교하고, 값이 바뀔 때만 UI Thread에 전달합니다. 후반에는 Bitmap Font를 이용한 OpenGL HUD를 선택할 수 있습니다.
 
 최고 점수는 `SharedPreferences`로 저장해 Android 시스템 기능과 게임 규칙의 경계를 학습합니다. 짧은 효과음은 `SoundPool`, 배경 음악은 `MediaPlayer` 후보이며 OpenGL 핵심 진도를 해치지 않도록 선택 기능으로 둡니다.
+
+현재는 `SoundPool` 기반 `SoundManager`와 최대 8개 Logical Channel을 제공했습니다. 실제 효과음·재생 규칙·최고 점수 저장은 미구현 실습 영역입니다. 긴 BGM, 별도 Backend 혼합, Audio Focus 정책은 이번 범위에 포함하지 않았습니다. [Component/Sound 가이드](COMPONENT_GUIDE.md)를 참고하세요.
 
 ## 난이도와 데이터
 

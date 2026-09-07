@@ -3,7 +3,8 @@ package kr.ac.lecture.mobilegame.foundation.input
 import android.view.MotionEvent
 
 /**
- * UI/Sensor Thread에서 수집한 입력 상태를 담는 immutable data class입니다.
+ * 터치와 센서 Callback에서 수집한 입력 상태를 담는 immutable data class입니다.
+ * 현재 SensorInput은 Main Thread에서 등록하므로 별도 Sensor Thread를 만들지 않습니다.
  * InputController가 생성하고 Game Loop가 읽는 데이터이므로 같은 파일에 둡니다.
  */
 data class InputSnapshot(

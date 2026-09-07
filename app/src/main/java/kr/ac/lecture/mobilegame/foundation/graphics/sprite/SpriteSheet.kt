@@ -13,6 +13,9 @@ data class SpriteRegion(
     val vTop: Float,
     val uRight: Float,
     val vBottom: Float,
+    // UV의 Half-Texel Inset과 원본 셀 크기는 서로 다른 정보입니다.
+    val widthPixels: Float = texture.width * (uRight - uLeft),
+    val heightPixels: Float = texture.height * (vBottom - vTop),
 )
 
 /**
@@ -46,6 +49,8 @@ class SpriteSheet(
             vTop = row * cellV + insetV,
             uRight = (column + 1) * cellU - insetU,
             vBottom = (row + 1) * cellV - insetV,
+            widthPixels = texture.width.toFloat() / columns,
+            heightPixels = texture.height.toFloat() / rows,
         )
     }
 
@@ -54,7 +59,7 @@ class SpriteSheet(
 
 /**
  * ResourceManager에서 Texture를 가져와 SpriteSheet를 생성하는 Loader입니다.
- * 별도 상태나 수명 없이 생성만 보조하므로 관련 타입과 한 파일에 둡니다.
+ * ResourceManager 참조만 보관하고 GPU 리소스를 직접 소유하지 않아 관련 타입과 한 파일에 둡니다.
  */
 class SpriteSheetLoader(private val resources: ResourceManager) {
     fun load(resourceId: Int, columns: Int, rows: Int): SpriteSheet =

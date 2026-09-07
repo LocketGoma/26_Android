@@ -75,6 +75,10 @@
 
 피격/격추 시트는 기존 비행 시트와 별도 Texture입니다. 상태가 바뀔 때 `ShootingSprites.newPlayerHitClip()`처럼 해당 Clip을 선택하는 작업은 학생 실습 영역으로 둡니다.
 
+Component 확장판에서는 `clip.toAsset("Damage")`를 `player.sprite?.addSprite(...)`로 등록한 뒤 `setSprite("Damage")`로 선택할 수 있습니다. Asset은 Frame/재생 설정을 전달하며 각 Object의 재생 상태는 `SpriteComponent`가 소유합니다. 같은 이름을 다시 선택하면 재생을 유지하고, `restart=true`일 때만 처음부터 재생합니다. 어떤 상황에 Damage/Idle로 바꿀지는 학생이 구현합니다.
+
+`SpriteRegion.widthPixels/heightPixels`는 원본 셀 크기입니다. UV의 Half-Texel Inset 때문에 표시 크기가 1 Pixel 줄어들지 않도록 UV 범위와 별도로 보관합니다. 단일 이미지용 `SpriteLoader`는 시트 자동 분할을 대신하지 않으므로, 격자 이미지는 기존 `SpriteSheetLoader`와 Catalog를 계속 사용하세요.
+
 ### `ui_sprites.png`
 
 5열×4행의 UI 전용 Texture입니다.

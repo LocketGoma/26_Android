@@ -6,9 +6,17 @@ import kr.ac.lecture.mobilegame.foundation.graphics.Color
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
 import kr.ac.lecture.mobilegame.foundation.input.InputSnapshot
 import kr.ac.lecture.mobilegame.game.sprite.SpriteClip
+import kr.ac.lecture.mobilegame.foundation.component.SpriteComponent
+import kr.ac.lecture.mobilegame.foundation.collision.AABBCollisionComponent
 
 /** 학생 수정 영역: 이동 규칙, 속도, 외형을 바꿔 보세요. */
-class Player(private val sprite: SpriteClip? = null) : GameObject(Vec2(0f, -0.72f), Vec2(0.28f, 0.22f)) {
+class Player(sprite: SpriteClip? = null) : GameObject(Vec2(0f, -0.72f), Vec2(0.28f, 0.22f)) {
+    init {
+        this.sprite = SpriteComponent(this, useObjectSize = true).apply {
+            sprite?.let { addSprite(it.toAsset("Idle")) }
+        }
+        collision = AABBCollisionComponent(transform, size.copy())
+    }
     private var target = Vec2(position.x, position.y)
     private val speed = GameConfig.PLAYER_SPEED // 초당 월드 좌표 이동량
 
@@ -18,7 +26,8 @@ class Player(private val sprite: SpriteClip? = null) : GameObject(Vec2(0f, -0.72
     }
 
     override fun update(deltaTime: Float) {
-        sprite?.update(deltaTime)
+        super.update(deltaTime)
+        // 기존 터치 추종 규칙을 유지합니다. MovementComponent로 교체하는 것은 학생 실습입니다.
         val dx = target.x - position.x
         val dy = target.y - position.y
         val distance = kotlin.math.sqrt(dx * dx + dy * dy)
@@ -32,7 +41,8 @@ class Player(private val sprite: SpriteClip? = null) : GameObject(Vec2(0f, -0.72
     }
 
     override fun draw(renderer: Renderer2D) {
-        sprite?.let { renderer.drawSprite(it.current, position, size) }
-            ?: renderer.drawRect(position, size, Color.CYAN)
+        if (sprite?.getCurrentSprite() != null) super.draw(renderer)
+        else renderer.drawRect(position, Vec2(size.x * transform.scale.x, size.y * transform.scale.y),
+            Color.CYAN, transform.rotation)
     }
 }

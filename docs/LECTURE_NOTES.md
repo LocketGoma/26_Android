@@ -16,6 +16,10 @@
 - Collision은 독립된 마법 기능이 아니라 Update 중 수행되는 계산이다.
 - Activity는 PC 프로그램의 `main()`과 완전히 같은 개념이 아니다. OS가 생명주기를 관리한다.
 - 가속도계와 자이로스코프는 같은 값을 주지 않는다.
+- Sprite Load Size는 기본 Pixel 표시 크기이며 Texture 자체를 Resize하는 기능이 아니다.
+- SpriteComponent Scale은 그림만 바꾸고 Transform Scale은 그림과 AABB에 적용된다. AABB는 Rotation을 따르지 않는다.
+- Sound의 Stop은 등록을 유지하고, Unregister는 Channel을 비운다. Pause 뒤 Play는 남아 있는 Stream을 이어서 재생한다.
+- SoundPool의 Channel은 이 프로젝트의 논리적 구분이지 오디오의 좌/우 채널이나 Android Audio Focus가 아니다.
 
 ## 150분 회차 운영 예시
 

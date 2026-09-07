@@ -22,6 +22,9 @@ data class Color(val red: Float, val green: Float, val blue: Float, val alpha: F
 
 /** 색 사각형과 Texture UV 영역을 그리는 최소 OpenGL ES 3.0 Renderer입니다. */
 class Renderer2D {
+    private val viewport = Viewport2D()
+    fun setViewport(width: Int, height: Int) { viewport.resize(width, height) }
+    fun pixelSizeToWorld(width: Float, height: Float): Vec2 = viewport.pixelSizeToWorld(width, height)
     private var program = 0
     private val vertexShader = """
         #version 300 es
@@ -69,8 +72,8 @@ class Renderer2D {
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
     }
 
-    fun drawRect(center: Vec2, size: Vec2, color: Color) {
-        drawQuad(center, size, 0f, 0f, 1f, 1f, color, textureHandle = 0)
+    fun drawRect(center: Vec2, size: Vec2, color: Color, rotation: Float = 0f) {
+        drawQuad(center, size, 0f, 0f, 1f, 1f, color, textureHandle = 0, rotation = rotation)
     }
 
     fun drawSprite(
@@ -78,11 +81,12 @@ class Renderer2D {
         center: Vec2,
         size: Vec2,
         tint: Color = Color.WHITE,
+        rotation: Float = 0f,
     ) {
         drawQuad(
             center, size,
             sprite.uLeft, sprite.vTop, sprite.uRight, sprite.vBottom,
-            tint, sprite.texture.handle,
+            tint, sprite.texture.handle, rotation,
         )
     }
 
@@ -95,6 +99,7 @@ class Renderer2D {
         vBottom: Float,
         color: Color,
         textureHandle: Int,
+        rotation: Float,
     ) {
         val left = center.x - size.x / 2f
         val right = center.x + size.x / 2f
@@ -108,6 +113,12 @@ class Renderer2D {
             right, top, uRight, vTop,
             left, top, uLeft, vTop,
         )
+        // 화면 비율을 반영한 Pixel 공간에서 회전한 다음 NDC로 되돌립니다.
+        for (i in vertices.indices step 4) {
+            val rotated = viewport.rotateOffset(vertices[i] - center.x, vertices[i + 1] - center.y, rotation)
+            vertices[i] = center.x + rotated.x
+            vertices[i + 1] = center.y + rotated.y
+        }
         val buffer = ByteBuffer.allocateDirect(vertices.size * Float.SIZE_BYTES)
             .order(ByteOrder.nativeOrder()).asFloatBuffer().apply { put(vertices); position(0) }
 
@@ -145,5 +156,23 @@ class Renderer2D {
         val status = IntArray(1)
         GLES30.glGetShaderiv(shader, GLES30.GL_COMPILE_STATUS, status, 0)
         check(status[0] == GLES30.GL_TRUE) { "Shader compile failed: ${GLES30.glGetShaderInfoLog(shader)}" }
+    }
+}
+
+/** Pixel→NDC 변환을 Renderer 쪽에 모읍니다. 양의 Rotation은 화면에서 반시계 방향입니다. */
+class Viewport2D {
+    private var width = 1
+    private var height = 1
+    fun resize(width: Int, height: Int) {
+        require(width > 0 && height > 0)
+        this.width = width
+        this.height = height
+    }
+    fun pixelSizeToWorld(width: Float, height: Float) = Vec2(width * 2f / this.width, height * 2f / this.height)
+    fun rotateOffset(x: Float, y: Float, degrees: Float): Vec2 {
+        val radians = Math.toRadians(degrees.toDouble())
+        val cos = kotlin.math.cos(radians).toFloat()
+        val sin = kotlin.math.sin(radians).toFloat()
+        return Vec2(x * cos - y * height / width * sin, x * width / height * sin + y * cos)
     }
 }

@@ -42,9 +42,11 @@ kr.ac.lecture.mobilegame
 ├─ MainActivity.kt
 ├─ foundation/                 # 강사 제공 중심
 │  ├─ core/                    # Game Loop, GameObject, DeltaTime, GLSurfaceView
+│  ├─ component/               # 선택형 SpriteComponent, MovementComponent
+│  ├─ audio/                   # SoundPool, Sound Asset, 최대 8개 Logical Channel
 │  ├─ graphics/                # OpenGL Renderer, Texture, Animation, ResourceManager
 │  ├─ input/                   # Touch, 가속도계, 자이로스코프
-│  ├─ collision/               # 실제 동작하는 AABB, CollisionSystem
+│  ├─ collision/               # Aabb, CollisionComponent, CollisionSystem
 │  ├─ scene/                   # Scene, SceneManager
 │  └─ ui/                      # 점수/GameOver HUD 경계
 └─ game/                       # 학생 수정 중심
@@ -71,7 +73,18 @@ kr.ac.lecture.mobilegame
 - 회색 바닥의 체력·폭탄 빈 케이스, 푸른 항공폭탄, 숫자 0~9, HEALTH/BOMB/SCORE를 담은 정적 UI 5×4 Texture
 - 체력 회복/폭탄 획득용 정적 필드 아이템 2×1 Texture와 별도 `ItemSpriteCatalog`
 
-기본 장면은 제공된 Sprite Sheet를 `ResourceManager`로 읽어 Texture와 Animation 흐름을 보여 줍니다. 각 게임 객체에는 Texture가 없을 때 색 사각형으로 대신 그리는 경로도 남겨 두어 초기 렌더링 실습에 사용할 수 있습니다. OBB는 축 투영과 회전 행렬이 필요하므로 필수 범위에서 구현하지 않고 `CollisionSystem`의 선택 심화 TODO로 남겼습니다. 고정 Physics Tick, 멀티터치, 텍스트/폰트 UI, 오디오, 저장, NDK(C++)도 후속 확장 항목입니다.
+기본 장면은 제공된 Sprite Sheet를 `ResourceManager`로 읽어 Texture와 Animation 흐름을 보여 줍니다. 각 게임 객체에는 Texture가 없을 때 색 사각형으로 대신 그리는 경로도 남겨 두어 초기 렌더링 실습에 사용할 수 있습니다. OBB는 필수 범위에서 구현하지 않고 `CollisionComponent`의 선택 심화 TODO로 남겼습니다. 고정 Physics Tick, 멀티터치, 텍스트/폰트 UI, 긴 BGM 재생, 저장, NDK(C++)는 후속 확장 항목입니다.
+
+### 선택형 Component와 Sound
+
+- `GameObject.transform`: 기존 `position`을 공유하며 Rotation(degree)과 Scale을 추가합니다.
+- `SpriteComponent`: 이름으로 Asset 교체, Object별 Animation, Runtime Scale을 제공합니다.
+- `SpriteLoader`: Resource ID로 로드하며 이름 생략 시 확장자 없는 Resource 이름을 사용합니다. Pixel Size 또는 원본 대비 Scale로 기본 크기를 지정합니다.
+- `MovementComponent`: Velocity, Max Speed, Acceleration, Deceleration을 제공합니다. 입력 방향이 일정한 구간을 시간 기준으로 적분하며 물리 엔진은 아닙니다.
+- `AABBCollisionComponent`: Sprite와 독립적인 Size/Offset을 사용합니다. Component가 없는 객체는 `CollisionSystem` 판정에서 제외합니다. Aabb 파일은 독립적으로 유지합니다.
+- `SoundManager`: 기본 4개·최대 8개 Logical Channel, Register/Play/Pause/Stop/Unregister, 3단계 Volume과 Lifecycle 연결을 제공합니다. 효과음 파일과 재생 이벤트는 학생이 추가합니다.
+
+사용 예제, 좌표 단위, 호환 옵션과 한계는 [Component/Sound 가이드](docs/COMPONENT_GUIDE.md)에, 기존 기능 대조와 변경 내역은 [개선 작업 보고서](docs/IMPROVEMENT_REPORT.md)에 정리했습니다. 기존 터치 이동·자동 발사·적 생성·점수 샘플은 보존했으며 새로운 과제 정답은 추가하지 않았습니다.
 
 ## FPS, Tick, DeltaTime, Physics Tick
 
@@ -160,6 +173,8 @@ if (BuildConfig.DEBUG_BLOCK) {
 
 값은 `app/build.gradle.kts`의 `buildConfigField`에서 변경한 뒤 다시 빌드합니다. `ShooterScene.updateSampleRules()`가 실제 Sample Block 사용 예입니다.
 
+현재 `SAMPLE_BLOCK=false`가 끄는 것은 `updateSampleRules()`의 자동 발사와 적 생성입니다. Player의 터치 이동이나 충돌 처리 코드까지 제거하는 스위치는 아닙니다. 과제 배포 시 별도 실습 브랜치에서 제공 범위를 정하세요.
+
 top-level Debug Function은 `foundation.debug.DebugFunctions.kt`에 있습니다.
 
 ```kotlin
@@ -206,7 +221,9 @@ gradlew.bat test assembleDebug
 
 macOS에서 `permission denied: ./gradlew`가 나오면 저장소에 실행 권한이 반영되어 있는지 확인합니다. 센서 실습은 실제 기기를 권장합니다.
 
-현재 프로젝트 빌드 조합은 Android Gradle Plugin 9.3.0과 그 공식 기본 조합인 Gradle 9.5.0입니다. Gradle 9.5.0은 JDK 17부터 26까지 실행할 수 있으며, 이 강의의 현재 설치 기준은 JDK 26입니다. AGP 9부터 Kotlin 지원이 내장되므로 별도의 `org.jetbrains.kotlin.android` 플러그인을 적용하지 않습니다. Gradle 실행 JDK와 앱 코드의 Java/Kotlin JVM Target은 별개입니다. 앱 코드는 JVM Target 17로 컴파일된 뒤 Android Build Tools가 DEX로 변환하며, 테스트 기기의 최소 Android 버전은 JVM Target이 아니라 `minSdk`와 사용 API에 의해 결정됩니다. 학생은 Gradle 버전을 따로 설치하지 않고 저장소의 Gradle Wrapper를 사용합니다.
+현재 저장소의 빌드 조합은 Android Gradle Plugin 9.3.1 / Gradle 9.5.0입니다. AGP 9부터 Kotlin 지원이 내장되므로 별도의 `org.jetbrains.kotlin.android` 플러그인을 적용하지 않습니다. Gradle 실행 JDK와 앱 코드의 Java/Kotlin JVM Target은 별개입니다. 앱 코드는 JVM Target 17로 컴파일된 뒤 Android Build Tools가 DEX로 변환하며, 테스트 기기의 최소 Android 버전은 JVM Target이 아니라 `minSdk`와 사용 API에 의해 결정됩니다. 학생은 Gradle 버전을 따로 설치하지 않고 저장소의 Gradle Wrapper를 사용합니다.
+
+JDK 26 설치 안내와 별개로, 현재 저장소의 `gradle/gradle-daemon-jvm.properties`에는 **Gradle Daemon용 JDK 25**가 지정되어 있습니다. 이 파일의 기준은 `JAVA_HOME`과 `org.gradle.java.home`보다 우선하며, 로컬에 맞는 JDK가 없으면 자동 다운로드가 발생할 수 있습니다. 이번 Component 개선에서는 기존 설정을 변경하지 않았고, 실제 빌드도 JDK 25로 수행했습니다. IDE 설정만 바꿨는데 실행 JDK가 달라지지 않으면 이 파일도 확인하세요. 강의용 JDK 기준을 통일할 때는 강사가 이 설정까지 함께 갱신해야 합니다. [Gradle Daemon JVM 기준](https://docs.gradle.org/9.5.0/userguide/gradle_daemon.html#sec:daemon_jvm_criteria)
 
 각 도구의 숫자가 가장 큰 버전을 무조건 섞는 것이 아니라, 최신 안정판 Android Studio가 공식 지원하는 AGP와 그 AGP가 요구하는 Gradle 조합을 사용합니다. 현재 Quail 3이 지원하는 AGP 상한은 9.3이므로 이 프로젝트도 AGP 9.3을 사용합니다.
 
@@ -260,8 +277,10 @@ macOS에서 `permission denied: ./gradlew`가 나오면 저장소에 실행 권�
 
 ## 다음 확장 체크리스트
 
-- [ ] PNG 스프라이트를 추가하고 `ResourceManager.texture()`와 UV 렌더링 연결
-- [ ] `SpriteAnimation.currentFrame`을 스프라이트 시트 UV에 반영
+- [x] PNG 스프라이트와 `ResourceManager.texture()` 및 UV 렌더링 연결
+- [x] `SpriteAnimation.currentFrame`을 스프라이트 시트 UV에 반영
+- [x] 선택형 Component와 이름 기반 Sprite 교체, 크기/회전, 가속·감속 기반 제공
+- [x] 효과음용 Sound/Channel 기반 제공 (효과음 파일·게임 이벤트 연결은 실습)
 - [ ] Title / Play / Result Scene 추가 및 전환
 - [ ] 점수용 Bitmap Font 또는 Android Canvas overlay 구현
 - [ ] 제거 대상 수집과 충돌 순회 비용 개선

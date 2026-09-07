@@ -15,8 +15,13 @@ data class Texture(val handle: Int, val width: Int, val height: Int)
 class ResourceManager(private val context: Context) {
     private val textures = mutableMapOf<Int, Texture>()
 
+    // Android Resource ID의 entry name은 파일 확장자를 포함하지 않습니다.
+    fun resourceName(resourceId: Int): String = context.resources.getResourceEntryName(resourceId)
+
     fun texture(resourceId: Int): Texture = textures.getOrPut(resourceId) {
-        val bitmap = requireNotNull(BitmapFactory.decodeResource(context.resources, resourceId))
+        // Pixel Size 기준이 기기 밀도에 따라 달라지지 않도록 자동 밀도 확대를 끕니다.
+        val bitmap = requireNotNull(BitmapFactory.decodeResource(context.resources, resourceId,
+            BitmapFactory.Options().apply { inScaled = false }))
         val handles = IntArray(1)
         GLES30.glGenTextures(1, handles, 0)
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, handles[0])
