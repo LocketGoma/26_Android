@@ -1,0 +1,43 @@
+package kr.ac.lecture.mobilegame.game
+
+import kr.ac.lecture.mobilegame.foundation.collision.AABBCollisionComponent
+import kr.ac.lecture.mobilegame.foundation.component.MovementComponent
+import kr.ac.lecture.mobilegame.foundation.component.SpriteComponent
+import kr.ac.lecture.mobilegame.foundation.core.GameObject
+import kr.ac.lecture.mobilegame.foundation.core.Vec2
+import kr.ac.lecture.mobilegame.foundation.graphics.Color
+import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
+import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteAsset
+import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteRegion
+
+enum class ItemType { LIFE, BOMB }
+
+class ItemPickup(
+    x: Float,
+    y: Float,
+    val type: ItemType,
+    region: SpriteRegion?,
+) : GameObject(Vec2(x, y), Vec2(0.16f, 0.16f)) {
+    init {
+        sprite = SpriteComponent(this, useObjectSize = true).apply {
+            region?.let { addSprite(SpriteAsset("${type.name}Item", listOf(it), it.widthPixels, it.heightPixels)) }
+        }
+        collision = AABBCollisionComponent(transform, size.copy())
+        movement = MovementComponent(transform, maxSpeed = 0.24f).apply {
+            setMoveDirection(0f, -1f)
+            velocity.y = -0.24f
+        }
+    }
+
+    override fun update(deltaTime: Float) {
+        super.update(deltaTime)
+        transform.rotation += 70f * deltaTime
+        if (position.y < -1.12f) active = false
+    }
+
+    override fun draw(renderer: Renderer2D) {
+        if (sprite?.getCurrentSprite() != null) super.draw(renderer)
+        else renderer.drawRect(position, size, if (type == ItemType.LIFE) Color.CYAN else Color.YELLOW,
+            transform.rotation)
+    }
+}

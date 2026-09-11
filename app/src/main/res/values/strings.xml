@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">모바일 게임 기반 시스템</string>
+    <string name="game_title">무한루프 슈팅</string>
+    <string name="start_game">시작하기</string>
+    <string name="show_leaderboard">하이스코어 / 리더보드 보기</string>
+    <string name="leaderboard">리더보드</string>
+    <string name="restart_game">다시 시작</string>
+    <string name="exit_game">종료</string>
+    <string name="back">돌아가기</string>
+    <string name="bomb_button">폭탄 사용</string>
+    <string name="bomb_count_description">폭탄 사용, %1$d개 보유</string>
+    <string name="game_over_score">GAME OVER\nSCORE  %1$d</string>
+    <string name="no_scores">저장된 점수가 없습니다.</string>
+    <string name="leaderboard_row">%1$d.  %2$d</string>
+    <string name="leaderboard_contents">%1$s\n\n%2$s</string>
 </resources>

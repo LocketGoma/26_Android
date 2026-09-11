@@ -13,7 +13,8 @@ class Explosion(
     x: Float,
     y: Float,
     private val frames: List<SpriteRegion>,
-) : GameObject(Vec2(x, y), Vec2(0.34f, 0.34f)) {
+    effectSize: Float = 0.34f,
+) : GameObject(Vec2(x, y), Vec2(effectSize, effectSize)) {
     private val secondsPerFrame = 0.08f
     private var elapsed = 0f
 

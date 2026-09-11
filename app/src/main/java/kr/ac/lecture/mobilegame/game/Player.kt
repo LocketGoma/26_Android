@@ -25,6 +25,13 @@ class Player(sprite: SpriteClip? = null) : GameObject(Vec2(0f, -0.72f), Vec2(0.2
         // TODO(센서 실습): accelerometerX를 target 또는 velocity로 변환해 보세요.
     }
 
+    fun reset() {
+        position.x = 0f
+        position.y = -0.72f
+        target = Vec2(position.x, position.y)
+        active = true
+    }
+
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
         // 기존 터치 추종 규칙을 유지합니다. MovementComponent로 교체하는 것은 학생 실습입니다.

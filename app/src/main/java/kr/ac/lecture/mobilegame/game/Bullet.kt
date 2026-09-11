@@ -15,6 +15,7 @@ class Bullet(
     x: Float,
     y: Float,
     sprite: SpriteRegion? = null,
+    val owner: BulletOwner = BulletOwner.PLAYER,
 ) : GameObject(Vec2(x, y), Vec2(0.05f, 0.13f)) {
     init {
         this.sprite = SpriteComponent(this, useObjectSize = true).apply {
@@ -22,18 +23,20 @@ class Bullet(
                 it.widthPixels, it.heightPixels)) }
         }
         collision = AABBCollisionComponent(transform, size.copy())
-        movement = MovementComponent(transform, maxSpeed = GameConfig.BULLET_SPEED).apply {
-            setMoveDirection(0f, 1f)
-            velocity.y = GameConfig.BULLET_SPEED
+        val speed = if (owner == BulletOwner.PLAYER) GameConfig.BULLET_SPEED else GameConfig.ENEMY_BULLET_SPEED
+        val direction = if (owner == BulletOwner.PLAYER) 1f else -1f
+        movement = MovementComponent(transform, maxSpeed = speed).apply {
+            setMoveDirection(0f, direction)
+            velocity.y = speed * direction
         }
     }
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
-        if (position.y > 1.1f) active = false
+        if (position.y > 1.1f || position.y < -1.1f) active = false
     }
     override fun draw(renderer: Renderer2D) {
         if (sprite?.getCurrentSprite() != null) super.draw(renderer)
         else renderer.drawRect(position, Vec2(size.x * transform.scale.x, size.y * transform.scale.y),
-            Color.YELLOW, transform.rotation)
+            if (owner == BulletOwner.PLAYER) Color.YELLOW else Color.RED, transform.rotation)
     }
 }
