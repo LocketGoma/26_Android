@@ -17,9 +17,13 @@ object GameConfig {
     const val INITIAL_BOMB_COUNT = 2
     const val MAX_BOMB_COUNT = 5
     const val BOMB_DAMAGE = 10
-    const val PLAYER_BULLET_DAMAGE = 10
+    const val PLAYER_BULLET_DAMAGE = 1
+    const val NORMAL_ENEMY_HP = 1
+    const val ELITE_ENEMY_HP = 5
+    const val ELITE_SPAWN_CHANCE = 0.2f
     const val ITEM_DROP_CHANCE = 0.05f
     const val ENEMY_SCORE = 10
+    const val ELITE_ENEMY_SCORE = 50
     const val BOSS_SCORE = 1_000
 
     fun enemyMultiplier(cycle: Int): Float =

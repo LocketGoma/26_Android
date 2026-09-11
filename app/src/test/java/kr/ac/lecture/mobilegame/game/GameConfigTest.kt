@@ -20,4 +20,10 @@ class GameConfigTest {
         assertEquals(120, GameConfig.bossMaxHp(2))
         assertEquals(150, GameConfig.bossMaxHp(5))
     }
+
+    @Test fun regularAndEliteEnemiesUseRequestedHealth() {
+        assertEquals(1, GameConfig.NORMAL_ENEMY_HP)
+        assertEquals(5, GameConfig.ELITE_ENEMY_HP)
+        assertEquals(1, GameConfig.PLAYER_BULLET_DAMAGE)
+    }
 }

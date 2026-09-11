@@ -9,7 +9,7 @@ import kr.ac.lecture.mobilegame.foundation.component.SpriteComponent
 import kr.ac.lecture.mobilegame.foundation.component.MovementComponent
 import kr.ac.lecture.mobilegame.foundation.collision.AABBCollisionComponent
 
-enum class EnemyKind { NORMAL, BOSS }
+enum class EnemyKind { NORMAL, ELITE, BOSS }
 
 /** 학생 수정 영역: 적 이동 패턴과 난이도에 따라 speed를 확장하세요. */
 class Enemy(
@@ -20,11 +20,16 @@ class Enemy(
     maxHp: Int = 1,
 ) : GameObject(
     Vec2(x, if (kind == EnemyKind.BOSS) 0.70f else 1.05f),
-    if (kind == EnemyKind.BOSS) Vec2(0.62f, 0.46f) else Vec2(0.27f, 0.22f),
+    when (kind) {
+        EnemyKind.NORMAL -> Vec2(0.24f, 0.18f)
+        EnemyKind.ELITE -> Vec2(0.36f, 0.27f)
+        EnemyKind.BOSS -> Vec2(0.62f, 0.46f)
+    },
 ) {
     var hp: Int = maxHp
         private set
     val isBoss: Boolean get() = kind == EnemyKind.BOSS
+    val isElite: Boolean get() = kind == EnemyKind.ELITE
 
     init {
         this.sprite = SpriteComponent(this, useObjectSize = true).apply {
@@ -52,6 +57,10 @@ class Enemy(
     override fun draw(renderer: Renderer2D) {
         if (sprite?.getCurrentSprite() != null) super.draw(renderer)
         else renderer.drawRect(position, Vec2(size.x * transform.scale.x, size.y * transform.scale.y),
-            if (isBoss) Color(0.75f, 0.15f, 0.90f) else Color.RED, transform.rotation)
+            when (kind) {
+                EnemyKind.NORMAL -> Color.RED
+                EnemyKind.ELITE -> Color(1f, 0.48f, 0.08f)
+                EnemyKind.BOSS -> Color(0.75f, 0.15f, 0.90f)
+            }, transform.rotation)
     }
 }

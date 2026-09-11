@@ -25,6 +25,9 @@ class Renderer2D {
     private val viewport = Viewport2D()
     fun setViewport(width: Int, height: Int) { viewport.resize(width, height) }
     fun pixelSizeToWorld(width: Float, height: Float): Vec2 = viewport.pixelSizeToWorld(width, height)
+    /** 세로형 화면에서도 Sprite가 원본 픽셀 종횡비를 유지하도록 월드 크기를 계산합니다. */
+    fun aspectCorrectedSize(sprite: SpriteRegion, worldWidth: Float): Vec2 =
+        viewport.aspectCorrectedSize(worldWidth, sprite.widthPixels / sprite.heightPixels)
     private var program = 0
     private val vertexShader = """
         #version 300 es
@@ -169,6 +172,12 @@ class Viewport2D {
         this.height = height
     }
     fun pixelSizeToWorld(width: Float, height: Float) = Vec2(width * 2f / this.width, height * 2f / this.height)
+    fun aspectCorrectedSize(worldWidth: Float, widthToHeight: Float): Vec2 {
+        require(worldWidth >= 0f && widthToHeight > 0f)
+        val pixelWidth = worldWidth * width / 2f
+        val pixelHeight = pixelWidth / widthToHeight
+        return Vec2(worldWidth, pixelHeight * 2f / height)
+    }
     fun rotateOffset(x: Float, y: Float, degrees: Float): Vec2 {
         val radians = Math.toRadians(degrees.toDouble())
         val cos = kotlin.math.cos(radians).toFloat()

@@ -2,8 +2,10 @@ package kr.ac.lecture.mobilegame.game
 
 import kr.ac.lecture.mobilegame.BuildConfig
 import kr.ac.lecture.mobilegame.foundation.audio.SoundManager
+import kr.ac.lecture.mobilegame.foundation.audio.ToneEffect
 import kr.ac.lecture.mobilegame.foundation.collision.CollisionSystem
 import kr.ac.lecture.mobilegame.foundation.debug.debugPrint
+import kr.ac.lecture.mobilegame.foundation.graphics.Color
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
 import kr.ac.lecture.mobilegame.foundation.input.InputSnapshot
 import kr.ac.lecture.mobilegame.foundation.scene.Scene
@@ -21,13 +23,14 @@ class ShooterScene(
     private val uiListener: GameUiListener? = null,
     private val sound: SoundManager? = null,
 ) : Scene {
-    // TODO(학생 실습): Sound Asset을 등록한 뒤 아래 피격/폭탄 이벤트에서 재생하세요.
+    // 별도 음원 Asset이 없어도 ToneEffect로 피드백하며, 추후 SoundPool Asset으로 교체할 수 있습니다.
     private val session = GameSession()
     private val player = Player(sprites?.newPlayerIdleClip())
     private val bullets = mutableListOf<Bullet>()
     private val enemies = mutableListOf<Enemy>()
     private val items = mutableListOf<ItemPickup>()
     private val explosions = mutableListOf<Explosion>()
+    private val screenFlashes = mutableListOf<ScreenFlash>()
     private val hud = GameHud(uiSprites)
     private var shotTimer = 0f
     private var spawnTimer = 0f
@@ -57,8 +60,17 @@ class ShooterScene(
     fun useBomb() {
         if (!session.useBomb()) return
 
+        sound?.playTone(ToneEffect.BOMB)
+        screenFlashes += ScreenFlash(Color(1f, 0.72f, 0.15f, 0.46f), 0.34f)
+        sprites?.explosion?.let {
+            explosions += Explosion(player.position.x, player.position.y, it, effectSize = 1.25f)
+        }
         bullets.filter { it.owner == BulletOwner.ENEMY }.forEach { it.active = false }
         enemies.filter { it.active }.toList().forEach { enemy ->
+            sprites?.impact?.let {
+                explosions += Explosion(enemy.position.x, enemy.position.y, it,
+                    effectSize = if (enemy.isBoss) 0.58f else 0.34f)
+            }
             if (enemy.damage(GameConfig.BOMB_DAMAGE)) onEnemyKilled(enemy)
         }
         notifyUi()
@@ -68,7 +80,9 @@ class ShooterScene(
         if (!session.isPlaying) {
             if (session.state == GameState.GAME_OVER) {
                 explosions.forEach { it.update(deltaTime) }
+                screenFlashes.forEach { it.update(deltaTime) }
                 explosions.removeAll { !it.active }
+                screenFlashes.removeAll { !it.active }
             }
             return
         }
@@ -85,12 +99,14 @@ class ShooterScene(
         enemies.forEach { it.update(deltaTime) }
         items.forEach { it.update(deltaTime) }
         explosions.forEach { it.update(deltaTime) }
+        screenFlashes.forEach { it.update(deltaTime) }
         resolveCollisions()
 
         bullets.removeAll { !it.active }
         enemies.removeAll { !it.active }
         items.removeAll { !it.active }
         explosions.removeAll { !it.active }
+        screenFlashes.removeAll { !it.active }
     }
 
     private fun updateShootingRules(deltaTime: Float) {
@@ -125,12 +141,19 @@ class ShooterScene(
     }
 
     private fun spawnNormalEnemy() {
-        val clip = if (Random.nextBoolean()) sprites?.newSmallEnemyClip() else sprites?.newBomberEnemyClip()
+        val kind = if (Random.nextFloat() < GameConfig.ELITE_SPAWN_CHANCE) {
+            EnemyKind.ELITE
+        } else {
+            EnemyKind.NORMAL
+        }
+        val clip = if (kind == EnemyKind.ELITE) sprites?.newBomberEnemyClip() else sprites?.newSmallEnemyClip()
         enemies += Enemy(
             x = Random.nextFloat() * 1.7f - 0.85f,
-            speed = 0.42f + (session.cycle - 1) * 0.025f,
+            speed = (if (kind == EnemyKind.ELITE) 0.30f else 0.46f) +
+                (session.cycle - 1) * 0.025f,
             sprite = clip,
-            maxHp = GameConfig.PLAYER_BULLET_DAMAGE,
+            kind = kind,
+            maxHp = if (kind == EnemyKind.ELITE) GameConfig.ELITE_ENEMY_HP else GameConfig.NORMAL_ENEMY_HP,
         )
     }
 
@@ -152,6 +175,10 @@ class ShooterScene(
         bullets.filter { it.owner == BulletOwner.PLAYER && it.active }.forEach { bullet ->
             enemies.firstOrNull { CollisionSystem.intersects(bullet, it) }?.let { enemy ->
                 bullet.active = false
+                sprites?.impact?.let {
+                    explosions += Explosion(enemy.position.x, enemy.position.y, it,
+                        effectSize = if (enemy.isBoss) 0.32f else 0.22f)
+                }
                 if (enemy.damage(GameConfig.PLAYER_BULLET_DAMAGE)) onEnemyKilled(enemy)
             }
         }
@@ -181,15 +208,27 @@ class ShooterScene(
 
     private fun handlePlayerHit() {
         if (!session.takeHit()) return
+        sound?.playTone(ToneEffect.HIT)
+        screenFlashes += ScreenFlash(Color(1f, 0.08f, 0.04f, 0.52f), 0.28f)
+        sprites?.impact?.let {
+            explosions += Explosion(player.position.x, player.position.y, it, effectSize = 0.68f)
+        }
+        sprites?.playerHitFrames?.let {
+            explosions += Explosion(player.position.x, player.position.y, it, effectSize = 0.56f)
+        }
         sprites?.playerDestroyedFrames?.let {
-            explosions += Explosion(player.position.x, player.position.y, it, effectSize = 0.48f)
+            explosions += Explosion(player.position.x, player.position.y, it, effectSize = 0.78f)
         }
         notifyUi()
         if (session.state == GameState.GAME_OVER) finishGame()
     }
 
     private fun onEnemyKilled(enemy: Enemy) {
-        val points = if (enemy.isBoss) GameConfig.BOSS_SCORE else GameConfig.ENEMY_SCORE
+        val points = when (enemy.kind) {
+            EnemyKind.NORMAL -> GameConfig.ENEMY_SCORE
+            EnemyKind.ELITE -> GameConfig.ELITE_ENEMY_SCORE
+            EnemyKind.BOSS -> GameConfig.BOSS_SCORE
+        }
         session.addScore(points)
         sprites?.explosion?.let { explosions += Explosion(enemy.position.x, enemy.position.y, it) }
 
@@ -225,6 +264,7 @@ class ShooterScene(
         enemies.filter { it.active }.forEach { it.draw(renderer) }
         items.filter { it.active }.forEach { it.draw(renderer) }
         explosions.filter { it.active }.forEach { it.draw(renderer) }
+        screenFlashes.filter { it.active }.forEach { it.draw(renderer) }
         val boss = enemies.firstOrNull { it.active && it.isBoss }
         hud.draw(renderer, session, boss?.hp, boss?.let { GameConfig.bossMaxHp(session.cycle) })
     }
@@ -234,6 +274,7 @@ class ShooterScene(
         enemies.clear()
         items.clear()
         explosions.clear()
+        screenFlashes.clear()
         shotTimer = 0f
         spawnTimer = 0f
         enemyShotTimer = 0f

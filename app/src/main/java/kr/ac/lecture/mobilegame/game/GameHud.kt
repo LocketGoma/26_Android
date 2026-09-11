@@ -37,8 +37,13 @@ class GameHud(private val sprites: UiSprites?) {
         if (session.state == GameState.NORMAL) {
             val tens = session.timerSeconds / 10
             val ones = session.timerSeconds % 10
-            renderer.drawSprite(ui.digit(tens), Vec2(-0.055f, 0.91f), Vec2(0.10f, 0.13f))
-            renderer.drawSprite(ui.digit(ones), Vec2(0.055f, 0.91f), Vec2(0.10f, 0.13f))
+            val tensSprite = ui.digit(tens)
+            val onesSprite = ui.digit(ones)
+            renderer.drawRect(Vec2(0f, 0.91f), Vec2(0.31f, 0.13f), Color(0.02f, 0.03f, 0.07f, 0.88f))
+            renderer.drawSprite(tensSprite, Vec2(-0.07f, 0.91f),
+                renderer.aspectCorrectedSize(tensSprite, TIMER_DIGIT_WIDTH))
+            renderer.drawSprite(onesSprite, Vec2(0.07f, 0.91f),
+                renderer.aspectCorrectedSize(onesSprite, TIMER_DIGIT_WIDTH))
         }
 
         drawBossHp(renderer, bossHp, bossMaxHp)
@@ -70,6 +75,10 @@ class GameHud(private val sprites: UiSprites?) {
         val lifeRatio = session.life / GameConfig.PLAYER_MAX_LIFE.toFloat()
         renderer.drawRect(Vec2(-0.9f + 0.3f * lifeRatio, 0.93f), Vec2(0.6f * lifeRatio, 0.035f), Color.CYAN)
         drawBossHp(renderer, hp, maxHp)
+    }
+
+    companion object {
+        private const val TIMER_DIGIT_WIDTH = 0.12f
     }
 }
 

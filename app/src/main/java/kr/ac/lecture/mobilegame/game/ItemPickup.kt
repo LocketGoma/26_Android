@@ -2,12 +2,10 @@ package kr.ac.lecture.mobilegame.game
 
 import kr.ac.lecture.mobilegame.foundation.collision.AABBCollisionComponent
 import kr.ac.lecture.mobilegame.foundation.component.MovementComponent
-import kr.ac.lecture.mobilegame.foundation.component.SpriteComponent
 import kr.ac.lecture.mobilegame.foundation.core.GameObject
 import kr.ac.lecture.mobilegame.foundation.core.Vec2
 import kr.ac.lecture.mobilegame.foundation.graphics.Color
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
-import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteAsset
 import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteRegion
 
 enum class ItemType { LIFE, BOMB }
@@ -16,12 +14,9 @@ class ItemPickup(
     x: Float,
     y: Float,
     val type: ItemType,
-    region: SpriteRegion?,
-) : GameObject(Vec2(x, y), Vec2(0.16f, 0.16f)) {
+    private val region: SpriteRegion?,
+) : GameObject(Vec2(x, y), Vec2(0.14f, 0.07f)) {
     init {
-        sprite = SpriteComponent(this, useObjectSize = true).apply {
-            region?.let { addSprite(SpriteAsset("${type.name}Item", listOf(it), it.widthPixels, it.heightPixels)) }
-        }
         collision = AABBCollisionComponent(transform, size.copy())
         movement = MovementComponent(transform, maxSpeed = 0.24f).apply {
             setMoveDirection(0f, -1f)
@@ -36,8 +31,12 @@ class ItemPickup(
     }
 
     override fun draw(renderer: Renderer2D) {
-        if (sprite?.getCurrentSprite() != null) super.draw(renderer)
-        else renderer.drawRect(position, size, if (type == ItemType.LIFE) Color.CYAN else Color.YELLOW,
-            transform.rotation)
+        if (region != null) {
+            renderer.drawSprite(region, position, renderer.aspectCorrectedSize(region, 0.14f),
+                rotation = transform.rotation)
+        } else {
+            renderer.drawRect(position, size,
+                if (type == ItemType.LIFE) Color.CYAN else Color.YELLOW, transform.rotation)
+        }
     }
 }

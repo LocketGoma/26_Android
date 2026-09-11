@@ -1,7 +1,15 @@
 package kr.ac.lecture.mobilegame.foundation.audio
 
 import android.content.Context
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.util.Log
+
+/** 별도 음원 파일이 없을 때도 즉각적인 게임 피드백을 주는 짧은 합성음입니다. */
+enum class ToneEffect(internal val toneType: Int, internal val durationMs: Int) {
+    HIT(ToneGenerator.TONE_PROP_NACK, 180),
+    BOMB(ToneGenerator.TONE_SUP_ERROR, 350),
+}
 
 /** Manager가 로드한 Sound의 이름과 기본 설정입니다. Playback 상태는 Channel이 소유합니다. */
 class SoundAsset internal constructor(
@@ -28,6 +36,7 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
     }
     init { require(channelCount in 1..8) { "channelCount must be 1..8" } }
     private val backend = SoundPoolBackend(context.applicationContext, channelCount)
+    private val toneGenerator = runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, 72) }.getOrNull()
     private val channels = Array(channelCount) { Channel() }
     private val assets = mutableSetOf<SoundAsset>()
     private val samples = mutableMapOf<Int, Int>() // Resource ID → SoundPool sample ID
@@ -115,9 +124,17 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
     }
 
     @Synchronized
+    fun playTone(effect: ToneEffect) {
+        if (!available() || hostPaused) return
+        toneGenerator?.stopTone()
+        toneGenerator?.startTone(effect.toneType, effect.durationMs)
+    }
+
+    @Synchronized
     fun onHostPause() {
         if (!available() || hostPaused) return
         hostPaused = true
+        toneGenerator?.stopTone()
         channels.forEach {
             if (it.streamId != 0 && !it.paused) { backend.pause(it.streamId); it.paused = true }
         }
@@ -137,6 +154,7 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
         released = true
         backend.onLoadComplete = null
         backend.release()
+        toneGenerator?.release()
         assets.clear()
         samples.clear()
         loadStatus.clear()

@@ -34,10 +34,12 @@ class Explosion(
 
     override fun draw(renderer: Renderer2D) {
         if (frames.isEmpty()) {
-            renderer.drawRect(position, Vec2(size.x * transform.scale.x, size.y * transform.scale.y),
+            renderer.drawRect(position, Vec2(size.x * transform.scale.x, size.x * transform.scale.x),
                 Color.YELLOW, transform.rotation)
             return
         }
-        super.draw(renderer)
+        val current = sprite?.currentRegion ?: return
+        renderer.drawSprite(current, position,
+            renderer.aspectCorrectedSize(current, size.x * transform.scale.x), rotation = transform.rotation)
     }
 }
