@@ -2,7 +2,6 @@ package kr.ac.lecture.mobilegame.game
 
 import kr.ac.lecture.mobilegame.foundation.core.GameObject
 import kr.ac.lecture.mobilegame.foundation.core.Vec2
-import kr.ac.lecture.mobilegame.foundation.graphics.Color
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
 import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteRegion
 import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteAsset
@@ -12,31 +11,28 @@ import kr.ac.lecture.mobilegame.foundation.component.SpriteComponent
 class Explosion(
     x: Float,
     y: Float,
-    private val frames: List<SpriteRegion>,
-) : GameObject(Vec2(x, y), Vec2(0.34f, 0.34f)) {
-    private val secondsPerFrame = 0.08f
-    private var elapsed = 0f
-
+    frames: List<SpriteRegion>,
+    effectSize: Float = 0.34f,
+) : GameObject(Vec2(x, y), Vec2(effectSize, effectSize)) {
     init {
-        if (frames.isNotEmpty()) sprite = SpriteComponent(this, useObjectSize = true).apply {
+        require(frames.isNotEmpty()) { "Explosion needs animation frames" }
+        sprite = SpriteComponent(this, useObjectSize = true).apply {
             addSprite(SpriteAsset("Explosion", frames, frames.first().widthPixels, frames.first().heightPixels,
-                secondsPerFrame, looping = false))
+                secondsPerFrame = 0.08f, looping = false))
         }
         // 폭발은 시각 효과이므로 CollisionComponent를 붙이지 않습니다.
     }
 
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
-        elapsed += deltaTime
-        if (elapsed >= frames.size * secondsPerFrame) active = false
+        if (sprite?.isFinished == true) active = false
     }
 
     override fun draw(renderer: Renderer2D) {
-        if (frames.isEmpty()) {
-            renderer.drawRect(position, Vec2(size.x * transform.scale.x, size.y * transform.scale.y),
-                Color.YELLOW, transform.rotation)
-            return
-        }
-        super.draw(renderer)
+        val current = sprite?.currentRegion ?: return
+        val drawn = renderer.aspectCorrectedSize(current, size.x)
+        drawn.x *= transform.scale.x
+        drawn.y *= transform.scale.y
+        renderer.drawSprite(current, position, drawn, rotation = transform.rotation)
     }
 }

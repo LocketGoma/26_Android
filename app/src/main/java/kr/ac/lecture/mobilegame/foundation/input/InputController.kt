@@ -1,11 +1,11 @@
 package kr.ac.lecture.mobilegame.foundation.input
 
 import android.view.MotionEvent
+import kr.ac.lecture.mobilegame.foundation.graphics.FitViewport
 
 /**
- * 터치와 센서 Callback에서 수집한 입력 상태를 담는 immutable data class입니다.
- * 현재 SensorInput은 Main Thread에서 등록하므로 별도 Sensor Thread를 만들지 않습니다.
- * InputController가 생성하고 Game Loop가 읽는 데이터이므로 같은 파일에 둡니다.
+ * 한 프레임에서 읽을 터치·센서 입력입니다. 전달한 값은 나중에 수정하지 않습니다.
+ * UI 스레드가 새 값을 만들고 GL 스레드가 snapshot()으로 읽습니다.
  */
 data class InputSnapshot(
     val touching: Boolean = false,
@@ -16,30 +16,44 @@ data class InputSnapshot(
     val gyroscopeZ: Float = 0f,
 )
 
-/** UI Thread의 입력을 immutable InputSnapshot으로 만들어 Render Thread에 전달합니다. */
+/** 터치·센서 콜백의 최신 값을 보관합니다. GL 스레드는 위치를 직접 건드리지 않고 입력만 읽습니다. */
 class InputController {
     @Volatile private var latest = InputSnapshot()
+    private var pointerId = -1
 
     fun snapshot(): InputSnapshot = latest
 
-    fun onTouch(event: MotionEvent, width: Int, height: Int): Boolean {
+    @Synchronized fun onTouch(event: MotionEvent, width: Int, height: Int,
+                             area: FitViewport = FitViewport(0, 0, width.coerceAtLeast(1), height.coerceAtLeast(1))): Boolean {
         if (width <= 0 || height <= 0) return false
-        val x = event.x / width * 2f - 1f
-        val y = 1f - event.y / height * 2f
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> pointerId = event.getPointerId(event.actionIndex)
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { clearTouch(); return true }
+            MotionEvent.ACTION_POINTER_UP -> {
+                if (event.getPointerId(event.actionIndex) == pointerId) clearTouch()
+                return true
+            }
+        }
+        // 첫 손가락을 놓았을 때 다른 손가락 위치로 갑자기 목표가 바뀌지 않게 합니다.
+        val index = event.findPointerIndex(pointerId)
+        if (index < 0) return true
+        val point = area.toNdc(event.getX(index), event.getY(index))
+        if (point == null) { latest = latest.copy(touching = false); return true }
         latest = latest.copy(
-            touching = event.actionMasked != MotionEvent.ACTION_UP &&
-                event.actionMasked != MotionEvent.ACTION_CANCEL,
-            worldX = x.coerceIn(-1f, 1f),
-            worldY = y.coerceIn(-1f, 1f),
+            touching = true,
+            worldX = point.first,
+            worldY = point.second,
         )
         return true
     }
 
-    fun updateAccelerometer(x: Float, y: Float) {
+    @Synchronized fun clearTouch() { pointerId = -1; latest = latest.copy(touching = false) }
+
+    @Synchronized fun updateAccelerometer(x: Float, y: Float) {
         latest = latest.copy(accelerometerX = x, accelerometerY = y)
     }
 
-    fun updateGyroscope(z: Float) {
+    @Synchronized fun updateGyroscope(z: Float) {
         latest = latest.copy(gyroscopeZ = z)
     }
 }

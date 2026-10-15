@@ -1,6 +1,6 @@
 package kr.ac.lecture.mobilegame.foundation.core
 
-/** DEBUG_BLOCK 안에서 선택적으로 사용할 세부 Debug Flag를 모아 둡니다. */
+/** 확장 실습용 설정 예입니다. main에서는 아래 기능을 아직 연결하지 않았습니다. */
 object DebugConfig {
     const val SHOW_COLLIDER = false
     const val SHOW_FPS = false

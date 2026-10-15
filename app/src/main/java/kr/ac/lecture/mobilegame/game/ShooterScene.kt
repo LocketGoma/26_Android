@@ -3,7 +3,6 @@ package kr.ac.lecture.mobilegame.game
 import kr.ac.lecture.mobilegame.BuildConfig
 import kr.ac.lecture.mobilegame.foundation.collision.CollisionSystem
 import kr.ac.lecture.mobilegame.foundation.debug.debugPrint
-import kr.ac.lecture.mobilegame.foundation.debug.debugString
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
 import kr.ac.lecture.mobilegame.foundation.input.InputSnapshot
 import kr.ac.lecture.mobilegame.foundation.scene.Scene
@@ -13,39 +12,36 @@ import kotlin.random.Random
 import kr.ac.lecture.mobilegame.foundation.audio.SoundManager
 
 /**
- * 학생 수정 중심 영역: 드래곤플라이트/1945식 세로 자동 슈팅의 규칙 초안입니다.
- * AI가 생성·수정한 코드도 각 update/draw/충돌 규칙의 역할을 학생 본인이 설명할 수 있어야 합니다.
+ * 작은 슈팅 예제입니다. 입력 → 생성 → 이동 → 충돌 → 제거 순서로 읽어 보세요.
+ * 이동 속도는 GameConfig, 적 배치와 충돌 결과는 이 파일에서 바꿉니다.
  */
 class ShooterScene(private val sprites: ShootingSprites? = null, private val sound: SoundManager? = null) : Scene {
     // TODO(학생 실습): 효과음을 한 번 load/register하고 원하는 게임 이벤트에서 play하세요.
     // 매 프레임 로드하지 않습니다. 채널 재등록 전 unregister가 필요합니다.
-    // GL Context 재생성으로 Scene이 새로 생겨도 sound는 Activity 수명 동안 유지됩니다.
+    // 그림을 다시 읽는 일과 소리를 재생하는 일은 따로 처리합니다.
     private val player = Player(sprites?.newPlayerIdleClip())
     private val bullets = mutableListOf<Bullet>()
     private val enemies = mutableListOf<Enemy>()
     private val explosions = mutableListOf<Explosion>()
     private val hud = DebugHud()
-    private var shotTimer = 0f
-    private var spawnTimer = 0f
-    private var elapsed = 0f
+    private var playerShotElapsed = 0f
+    private var enemySpawnElapsed = 0f
+    private var playElapsed = 0f
     private var score = 0
     private var gameOver = false
 
     override fun update(deltaTime: Float, input: InputSnapshot) {
-        if (gameOver) return
-        elapsed += deltaTime
-        player.readInput(input)
-        player.update(deltaTime)
-
-        // SAMPLE BLOCK: false로 빌드하면 아래 제공 샘플 규칙을 실행하지 않습니다.
-        if (BuildConfig.SAMPLE_BLOCK) {
-            updateSampleRules(deltaTime)
+        if (!gameOver) {
+            playElapsed += deltaTime
+            player.readInput(input)
+            player.update(deltaTime)
+            if (BuildConfig.SAMPLE_BLOCK) updateShootingRules(deltaTime)
+            for (bullet in bullets) if (bullet.active) bullet.update(deltaTime)
+            for (enemy in enemies) if (enemy.active) enemy.update(deltaTime)
         }
-
-        bullets.forEach { it.update(deltaTime) }
-        enemies.forEach { it.update(deltaTime) }
-        explosions.forEach { it.update(deltaTime) }
-        resolveCollisions()
+        // 게임이 끝나도 이미 시작한 폭발은 마지막 그림까지 재생합니다.
+        for (effect in explosions) if (effect.active) effect.update(deltaTime)
+        if (!gameOver) resolveCollisions()
 
         // 1차 구현은 active 플래그 + removeAll. 후속 단계에서 ObjectPool로 교체합니다.
         bullets.removeAll { !it.active }
@@ -53,21 +49,21 @@ class ShooterScene(private val sprites: ShootingSprites? = null, private val sou
         explosions.removeAll { !it.active }
     }
 
-    private fun updateSampleRules(deltaTime: Float) {
-        shotTimer += deltaTime
-        if (shotTimer >= GameConfig.FIRE_INTERVAL_SECONDS) {
-            shotTimer -= GameConfig.FIRE_INTERVAL_SECONDS
+    private fun updateShootingRules(deltaTime: Float) {
+        playerShotElapsed += deltaTime
+        while (playerShotElapsed >= GameConfig.FIRE_INTERVAL_SECONDS) {
+            playerShotElapsed -= GameConfig.FIRE_INTERVAL_SECONDS
             bullets += Bullet(player.position.x, player.position.y + player.size.y, sprites?.playerBullet)
         }
 
-        spawnTimer += deltaTime
-        val spawnInterval = (1.0f - elapsed * 0.01f).coerceAtLeast(0.35f) // Difficulty 초안
-        if (spawnTimer >= spawnInterval) {
-            spawnTimer -= spawnInterval
+        enemySpawnElapsed += deltaTime
+        val spawnInterval = GameConfig.enemySpawnInterval(playElapsed)
+        while (enemySpawnElapsed >= spawnInterval) {
+            enemySpawnElapsed -= spawnInterval
             val enemyClip = if (Random.nextBoolean()) sprites?.newSmallEnemyClip() else sprites?.newBomberEnemyClip()
             enemies += Enemy(
                 x = Random.nextFloat() * 1.7f - 0.85f,
-                speed = 0.42f + elapsed * 0.004f,
+                speed = GameConfig.enemySpeed(playElapsed),
                 sprite = enemyClip,
             )
         }
@@ -81,7 +77,7 @@ class ShooterScene(private val sprites: ShootingSprites? = null, private val sou
                 sprites?.explosion?.let { explosions += Explosion(enemy.position.x, enemy.position.y, it) }
                 score += GameConfig.ENEMY_SCORE
                 hud.updateScore(score)
-                debugPrint("score=${debugString(score)}", display = false)
+                debugPrint("score=$score", display = false)
             }
         }
         if (enemies.any { CollisionSystem.intersects(player, it) }) {
@@ -93,9 +89,9 @@ class ShooterScene(private val sprites: ShootingSprites? = null, private val sou
 
     override fun draw(renderer: Renderer2D) {
         player.draw(renderer)
-        bullets.filter { it.active }.forEach { it.draw(renderer) }
-        enemies.filter { it.active }.forEach { it.draw(renderer) }
-        explosions.filter { it.active }.forEach { it.draw(renderer) }
+        for (bullet in bullets) if (bullet.active) bullet.draw(renderer)
+        for (enemy in enemies) if (enemy.active) enemy.draw(renderer)
+        for (effect in explosions) if (effect.active) effect.draw(renderer)
         hud.draw(renderer)
     }
 }

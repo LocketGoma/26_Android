@@ -7,10 +7,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
-/**
- * Renderer2D에 전달할 RGBA 값을 담는 immutable data class입니다.
- * Render 명령과 항상 함께 읽는 작은 데이터이므로 Renderer2D와 같은 파일에 둡니다.
- */
+/** 빨강·초록·파랑·불투명도를 0..1 값으로 전달합니다. alpha=0은 투명, 1은 불투명입니다. */
 data class Color(val red: Float, val green: Float, val blue: Float, val alpha: Float = 1f) {
     companion object {
         val CYAN = Color(0.20f, 0.80f, 1.00f)
@@ -20,12 +17,21 @@ data class Color(val red: Float, val green: Float, val blue: Float, val alpha: F
     }
 }
 
-/** 색 사각형과 Texture UV 영역을 그리는 최소 OpenGL ES 3.0 Renderer입니다. */
+/** 사각형이나 그림을 OpenGL ES 3.0으로 출력합니다. 물체 이동과 게임 규칙은 계산하지 않습니다. */
 class Renderer2D {
     private val viewport = Viewport2D()
     fun setViewport(width: Int, height: Int) { viewport.resize(width, height) }
     fun pixelSizeToWorld(width: Float, height: Float): Vec2 = viewport.pixelSizeToWorld(width, height)
+    /** 세로형 화면에서도 Sprite가 원본 픽셀 종횡비를 유지하도록 월드 크기를 계산합니다. */
+    fun aspectCorrectedSize(sprite: SpriteRegion, worldWidth: Float): Vec2 =
+        viewport.aspectCorrectedSize(worldWidth, sprite.widthPixels / sprite.heightPixels)
     private var program = 0
+    private var colorLocation = -1
+    private var useTextureLocation = -1
+    private var textureLocation = -1
+    // 사각형의 정점 6개 × (위치 2 + UV 2). 같은 버퍼를 재사용합니다.
+    private val vertices = ByteBuffer.allocateDirect(6 * 4 * Float.SIZE_BYTES)
+        .order(ByteOrder.nativeOrder()).asFloatBuffer()
     private val vertexShader = """
         #version 300 es
         layout(location = 0) in vec2 aPosition;
@@ -62,6 +68,9 @@ class Renderer2D {
         check(status[0] == GLES30.GL_TRUE) { "Program link failed: ${GLES30.glGetProgramInfoLog(program)}" }
         GLES30.glDeleteShader(vertex)
         GLES30.glDeleteShader(fragment)
+        colorLocation = GLES30.glGetUniformLocation(program, "uColor")
+        useTextureLocation = GLES30.glGetUniformLocation(program, "uUseTexture")
+        textureLocation = GLES30.glGetUniformLocation(program, "uTexture")
         GLES30.glEnable(GLES30.GL_BLEND)
         // Android Bitmap은 premultiplied alpha이므로 GL_ONE을 사용합니다.
         GLES30.glBlendFunc(GLES30.GL_ONE, GLES30.GL_ONE_MINUS_SRC_ALPHA)
@@ -82,10 +91,12 @@ class Renderer2D {
         size: Vec2,
         tint: Color = Color.WHITE,
         rotation: Float = 0f,
+        flipX: Boolean = false,
     ) {
         drawQuad(
             center, size,
-            sprite.uLeft, sprite.vTop, sprite.uRight, sprite.vBottom,
+            if (flipX) sprite.uRight else sprite.uLeft, sprite.vTop,
+            if (flipX) sprite.uLeft else sprite.uRight, sprite.vBottom,
             tint, sprite.texture.handle, rotation,
         )
     }
@@ -105,38 +116,41 @@ class Renderer2D {
         val right = center.x + size.x / 2f
         val top = center.y + size.y / 2f
         val bottom = center.y - size.y / 2f
-        val vertices = floatArrayOf(
-            left, bottom, uLeft, vBottom,
-            right, bottom, uRight, vBottom,
-            right, top, uRight, vTop,
-            left, bottom, uLeft, vBottom,
-            right, top, uRight, vTop,
-            left, top, uLeft, vTop,
-        )
-        // 화면 비율을 반영한 Pixel 공간에서 회전한 다음 NDC로 되돌립니다.
-        for (i in vertices.indices step 4) {
-            val rotated = viewport.rotateOffset(vertices[i] - center.x, vertices[i + 1] - center.y, rotation)
-            vertices[i] = center.x + rotated.x
-            vertices[i + 1] = center.y + rotated.y
-        }
-        val buffer = ByteBuffer.allocateDirect(vertices.size * Float.SIZE_BYTES)
-            .order(ByteOrder.nativeOrder()).asFloatBuffer().apply { put(vertices); position(0) }
+        vertices.position(0)
+        putVertex(left, bottom, uLeft, vBottom, center, rotation)
+        putVertex(right, bottom, uRight, vBottom, center, rotation)
+        putVertex(right, top, uRight, vTop, center, rotation)
+        putVertex(left, bottom, uLeft, vBottom, center, rotation)
+        putVertex(right, top, uRight, vTop, center, rotation)
+        putVertex(left, top, uLeft, vTop, center, rotation)
 
         GLES30.glUseProgram(program)
-        GLES30.glUniform4f(GLES30.glGetUniformLocation(program, "uColor"), color.red, color.green, color.blue, color.alpha)
+        // 호출자는 보통의 RGBA를 전달합니다. Bitmap과 같은 premultiplied alpha로 여기서 통일합니다.
+        GLES30.glUniform4f(colorLocation, color.red * color.alpha, color.green * color.alpha,
+            color.blue * color.alpha, color.alpha)
         val useTexture = textureHandle != 0
-        GLES30.glUniform1i(GLES30.glGetUniformLocation(program, "uUseTexture"), if (useTexture) 1 else 0)
+        GLES30.glUniform1i(useTextureLocation, if (useTexture) 1 else 0)
         if (useTexture) {
             GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureHandle)
-            GLES30.glUniform1i(GLES30.glGetUniformLocation(program, "uTexture"), 0)
+            GLES30.glUniform1i(textureLocation, 0)
         }
 
-        bindAttribute(buffer, index = 0, offsetFloats = 0)
-        bindAttribute(buffer, index = 1, offsetFloats = 2)
+        bindAttribute(vertices, index = 0, offsetFloats = 0)
+        bindAttribute(vertices, index = 1, offsetFloats = 2)
         GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 6)
         GLES30.glDisableVertexAttribArray(0)
         GLES30.glDisableVertexAttribArray(1)
+    }
+
+    private fun putVertex(x: Float, y: Float, u: Float, v: Float, center: Vec2, rotation: Float) {
+        if (rotation == 0f) {
+            vertices.put(x).put(y)
+        } else {
+            val offset = viewport.rotateOffset(x - center.x, y - center.y, rotation)
+            vertices.put(center.x + offset.x).put(center.y + offset.y)
+        }
+        vertices.put(u).put(v)
     }
 
     private fun bindAttribute(buffer: FloatBuffer, index: Int, offsetFloats: Int) {
@@ -169,6 +183,12 @@ class Viewport2D {
         this.height = height
     }
     fun pixelSizeToWorld(width: Float, height: Float) = Vec2(width * 2f / this.width, height * 2f / this.height)
+    fun aspectCorrectedSize(worldWidth: Float, widthToHeight: Float): Vec2 {
+        require(worldWidth >= 0f && widthToHeight > 0f)
+        val pixelWidth = worldWidth * width / 2f
+        val pixelHeight = pixelWidth / widthToHeight
+        return Vec2(worldWidth, pixelHeight * 2f / height)
+    }
     fun rotateOffset(x: Float, y: Float, degrees: Float): Vec2 {
         val radians = Math.toRadians(degrees.toDouble())
         val cos = kotlin.math.cos(radians).toFloat()

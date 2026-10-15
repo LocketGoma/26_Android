@@ -1,6 +1,6 @@
 package kr.ac.lecture.mobilegame.foundation.graphics
 
-/** 스프라이트 시트의 프레임 번호를 시간 기반으로 계산하는 Animation 초안입니다. */
+/** 스프라이트 프레임과 일회 재생의 종료를 계산합니다. 마지막 프레임도 지정 시간만큼 유지합니다. */
 class SpriteAnimation(
     private val frameCount: Int,
     private val secondsPerFrame: Float,
@@ -9,16 +9,28 @@ class SpriteAnimation(
     var currentFrame: Int = 0
         private set
     private var elapsed = 0f
+    var isFinished = false
+        private set
+
+    init {
+        require(frameCount > 0)
+        require(secondsPerFrame.isFinite() && secondsPerFrame > 0f)
+    }
 
     fun update(deltaTime: Float) {
-        if (frameCount <= 1 || secondsPerFrame <= 0f) return
+        require(deltaTime.isFinite() && deltaTime >= 0f)
+        if (isFinished) return
         elapsed += deltaTime
         while (elapsed >= secondsPerFrame) {
             elapsed -= secondsPerFrame
-            currentFrame = if (looping) (currentFrame + 1) % frameCount
-            else (currentFrame + 1).coerceAtMost(frameCount - 1)
+            if (!looping && currentFrame == frameCount - 1) {
+                isFinished = true
+                elapsed = 0f
+                break
+            }
+            currentFrame = (currentFrame + 1) % frameCount
         }
     }
 
-    fun reset() { currentFrame = 0; elapsed = 0f }
+    fun reset() { currentFrame = 0; elapsed = 0f; isFinished = false }
 }

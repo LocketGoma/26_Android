@@ -1,42 +1,65 @@
 package kr.ac.lecture.mobilegame.foundation.core
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.opengl.GLSurfaceView
+import kr.ac.lecture.mobilegame.foundation.graphics.FitViewport
+import kr.ac.lecture.mobilegame.foundation.graphics.ResourceManager
 import kr.ac.lecture.mobilegame.foundation.input.InputController
 import kr.ac.lecture.mobilegame.foundation.input.SensorInput
-import kr.ac.lecture.mobilegame.foundation.audio.SoundManager
+import kr.ac.lecture.mobilegame.foundation.scene.Scene
 
-/** Activity와 OpenGL Render Thread 사이를 연결하는 기반 시스템 View입니다. */
-class GameSurfaceView(context: Context) : GLSurfaceView(context) {
+/** Android의 화면·터치·센서를 게임 루프에 연결합니다. 어떤 게임을 만들지는 Activity에서 정합니다. */
+@SuppressLint("ViewConstructor")
+class GameSurfaceView(
+    context: Context,
+    private val contentAspectRatio: Float? = null,
+    nearestFiltering: Boolean = false,
+    createScene: (ResourceManager) -> Scene,
+) : GLSurfaceView(context) {
     private val input = InputController()
     private val sensorInput = SensorInput(context, input)
-    private val sound = SoundManager(context)
-    private val gameRenderer = GameRenderer(context, input, sound)
+    private val gameRenderer = GameRenderer(
+        context = context,
+        contentAspectRatio = contentAspectRatio,
+        nearestFiltering = nearestFiltering,
+        readInput = input::snapshot,
+        createScene = createScene,
+    )
 
     init {
         setEGLContextClientVersion(3)
+        preserveEGLContextOnPause = true
         setRenderer(gameRenderer)
         renderMode = RENDERMODE_CONTINUOUSLY
-        setOnTouchListener { _, event -> input.onTouch(event, width, height) }
+        setOnTouchListener { _, event ->
+            if (width <= 0 || height <= 0) false
+            else {
+                // 그리는 영역과 같은 영역으로 터치 위치를 변환합니다.
+                val area = contentAspectRatio?.let { FitViewport.fit(width, height, it) }
+                    ?: FitViewport(0, 0, width, height)
+                input.onTouch(event, width, height, area)
+            }
+        }
     }
 
     fun onHostResume() {
-        super.onResume()
         sensorInput.start()
-        sound.onHostResume()
         gameRenderer.resume()
+        super.onResume()
     }
 
     fun onHostPause() {
-        gameRenderer.pause()
-        sound.onHostPause()
+        clearInput()
         sensorInput.stop()
+        gameRenderer.pause()
         super.onPause()
     }
 
-    fun onHostDestroy() {
-        sensorInput.stop()
-        sound.release()
-        // OpenGL 객체 해제는 컨텍스트가 유효한 Render Thread에서 수행하도록 후속 실습에서 보강합니다.
+    fun clearInput() = input.clearTouch()
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        clearInput()
     }
 }

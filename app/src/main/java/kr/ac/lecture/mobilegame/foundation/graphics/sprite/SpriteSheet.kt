@@ -4,8 +4,8 @@ import kr.ac.lecture.mobilegame.foundation.graphics.ResourceManager
 import kr.ac.lecture.mobilegame.foundation.graphics.Texture
 
 /**
- * 전체 Texture 중 Sprite 하나가 사용할 UV 범위를 담는 immutable data class입니다.
- * SpriteSheet가 계산해 반환하는 데이터이므로 같은 파일에서 계산식과 구조를 함께 확인합니다.
+ * Texture에서 그림 하나가 사용할 영역입니다. UV는 그림 전체를 0..1로 나타낸 좌표입니다.
+ * 영역만 나누므로 원본 그림을 여러 장으로 복사하지 않습니다.
  */
 data class SpriteRegion(
     val texture: Texture,
@@ -16,7 +16,17 @@ data class SpriteRegion(
     // UV의 Half-Texel Inset과 원본 셀 크기는 서로 다른 정보입니다.
     val widthPixels: Float = texture.width * (uRight - uLeft),
     val heightPixels: Float = texture.height * (vBottom - vTop),
-)
+) {
+    /** 셀 안의 0..1 범위를 잘라냅니다. 투명 여백을 제외해도 원래 Texture는 공유합니다. */
+    fun crop(left: Float, top: Float, right: Float, bottom: Float): SpriteRegion {
+        require(left >= 0f && top >= 0f && right <= 1f && bottom <= 1f && left < right && top < bottom)
+        val width = uRight - uLeft
+        val height = vBottom - vTop
+        return copy(uLeft = uLeft + left * width, uRight = uLeft + right * width,
+            vTop = vTop + top * height, vBottom = vTop + bottom * height,
+            widthPixels = widthPixels * (right - left), heightPixels = heightPixels * (bottom - top))
+    }
+}
 
 /**
  * [강사 제공 기반 시스템]
@@ -58,8 +68,8 @@ class SpriteSheet(
 }
 
 /**
- * ResourceManager에서 Texture를 가져와 SpriteSheet를 생성하는 Loader입니다.
- * ResourceManager 참조만 보관하고 GPU 리소스를 직접 소유하지 않아 관련 타입과 한 파일에 둡니다.
+ * ResourceManager가 읽은 Texture에 격자 정보를 붙입니다.
+ * 같은 그림을 다시 요청하면 ResourceManager의 캐시를 사용합니다.
  */
 class SpriteSheetLoader(private val resources: ResourceManager) {
     fun load(resourceId: Int, columns: Int, rows: Int): SpriteSheet =

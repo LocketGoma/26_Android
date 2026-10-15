@@ -55,4 +55,17 @@ class MovementComponent(
         velocity.x = nextX
         velocity.y = nextY
     }
+
+    companion object {
+        /** 탄환·낙하 아이템처럼 처음부터 등속으로 움직이는 설정을 한곳에 모읍니다. */
+        fun constantVelocity(transform: Transform, x: Float, y: Float): MovementComponent {
+            require(x.isFinite() && y.isFinite())
+            val speed = kotlin.math.hypot(x.toDouble(), y.toDouble()).toFloat()
+            return MovementComponent(transform, maxSpeed = speed).apply {
+                if (speed > 0f) setMoveDirection(x / speed, y / speed)
+                velocity.x = x
+                velocity.y = y
+            }
+        }
+    }
 }
