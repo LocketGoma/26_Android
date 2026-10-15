@@ -1,6 +1,7 @@
 package kr.ac.lecture.mobilegame
 
 import android.app.Activity
+import android.content.Context
 import android.os.Build
 import android.view.View
 import android.view.WindowInsets
@@ -44,3 +45,6 @@ object SampleScreen {
         }
     }
 }
+
+/** Android 레이아웃 간격은 기기 밀도와 무관한 dp로 지정합니다. */
+internal fun Context.dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()

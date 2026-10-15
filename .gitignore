@@ -37,3 +37,4 @@ google-services.json
 # Local authoring prompts (preserved locally, excluded from commits)
 **/*[Pp]rompt*
 **/*프롬프트*
+docs

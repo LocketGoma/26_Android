@@ -144,5 +144,4 @@ class PlatformerActivity : Activity() {
 
     override fun onResume() { super.onResume(); gameView.onHostResume() }
     override fun onPause() { touchControls.clearInputs(); gameView.onHostPause(); super.onPause() }
-    private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 }

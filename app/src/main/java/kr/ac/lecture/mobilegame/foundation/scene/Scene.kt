@@ -18,14 +18,22 @@ interface Scene {
  */
 class SceneManager(initialScene: Scene) {
     private var current: Scene = initialScene.also { it.onEnter() }
+    private var width = 0
+    private var height = 0
 
     fun change(next: Scene) {
         current.onExit()
         current = next
         current.onEnter()
+        if (width > 0 && height > 0) current.resize(width, height)
     }
 
     fun update(deltaTime: Float, input: InputSnapshot) = current.update(deltaTime, input)
-    fun resize(width: Int, height: Int) = current.resize(width, height)
+    fun resize(width: Int, height: Int) {
+        require(width > 0 && height > 0)
+        this.width = width
+        this.height = height
+        current.resize(width, height)
+    }
     fun draw(renderer: Renderer2D) = current.draw(renderer)
 }

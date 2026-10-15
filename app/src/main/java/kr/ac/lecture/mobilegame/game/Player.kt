@@ -3,7 +3,6 @@ package kr.ac.lecture.mobilegame.game
 import kr.ac.lecture.mobilegame.foundation.core.GameObject
 import kr.ac.lecture.mobilegame.foundation.core.Vec2
 import kr.ac.lecture.mobilegame.foundation.graphics.Color
-import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
 import kr.ac.lecture.mobilegame.foundation.input.InputSnapshot
 import kr.ac.lecture.mobilegame.game.sprite.SpriteClip
 import kr.ac.lecture.mobilegame.foundation.component.SpriteComponent
@@ -17,18 +16,24 @@ class Player(sprite: SpriteClip? = null) : GameObject(Vec2(0f, -0.72f), Vec2(0.2
         }
         collision = AABBCollisionComponent(transform, size.copy())
     }
-    private var target = Vec2(position.x, position.y)
+    override val fallbackColor = Color.CYAN
+    private val target = position.copy()
     private val speed = GameConfig.PLAYER_SPEED // 초당 월드 좌표 이동량
 
     fun readInput(input: InputSnapshot) {
-        if (input.touching) target = Vec2(input.worldX, input.worldY)
+        if (input.touching) {
+            target.x = input.worldX.coerceIn(-0.9f, 0.9f)
+            target.y = input.worldY.coerceIn(-0.9f, 0.9f)
+        }
         // TODO(센서 실습): accelerometerX를 target 또는 velocity로 변환해 보세요.
     }
 
     fun reset() {
         position.x = 0f
         position.y = -0.72f
-        target = Vec2(position.x, position.y)
+        target.x = position.x
+        target.y = position.y
+        sprite?.setSprite("Idle", restart = true)
         active = true
     }
 
@@ -45,11 +50,5 @@ class Player(sprite: SpriteClip? = null) : GameObject(Vec2(0f, -0.72f), Vec2(0.2
         }
         position.x = position.x.coerceIn(-0.9f, 0.9f)
         position.y = position.y.coerceIn(-0.9f, 0.9f)
-    }
-
-    override fun draw(renderer: Renderer2D) {
-        if (sprite?.getCurrentSprite() != null) super.draw(renderer)
-        else renderer.drawRect(position, Vec2(size.x * transform.scale.x, size.y * transform.scale.y),
-            Color.CYAN, transform.rotation)
     }
 }

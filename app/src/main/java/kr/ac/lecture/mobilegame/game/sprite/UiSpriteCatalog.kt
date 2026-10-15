@@ -15,8 +15,6 @@ data class UiSprites(
     val healthLabel: SpriteRegion,
     val bombLabel: SpriteRegion,
     val scoreLabel: SpriteRegion,
-    val plus: SpriteRegion,
-    val minus: SpriteRegion,
 ) {
     fun digit(value: Int): SpriteRegion {
         require(value in 0..9) { "digit must be in 0..9: $value" }
@@ -44,8 +42,6 @@ object UiSpriteCatalog {
             healthLabel = sheet.region(column = 0, row = 3),
             bombLabel = sheet.region(column = 1, row = 3),
             scoreLabel = sheet.region(column = 2, row = 3),
-            plus = sheet.region(column = 3, row = 3),
-            minus = sheet.region(column = 4, row = 3),
         )
     }
 }

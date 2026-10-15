@@ -16,7 +16,17 @@ data class SpriteRegion(
     // UV의 Half-Texel Inset과 원본 셀 크기는 서로 다른 정보입니다.
     val widthPixels: Float = texture.width * (uRight - uLeft),
     val heightPixels: Float = texture.height * (vBottom - vTop),
-)
+) {
+    /** 셀 안의 0..1 범위를 잘라냅니다. 투명 여백을 제외해도 원래 Texture는 공유합니다. */
+    fun crop(left: Float, top: Float, right: Float, bottom: Float): SpriteRegion {
+        require(left >= 0f && top >= 0f && right <= 1f && bottom <= 1f && left < right && top < bottom)
+        val width = uRight - uLeft
+        val height = vBottom - vTop
+        return copy(uLeft = uLeft + left * width, uRight = uLeft + right * width,
+            vTop = vTop + top * height, vBottom = vTop + bottom * height,
+            widthPixels = widthPixels * (right - left), heightPixels = heightPixels * (bottom - top))
+    }
+}
 
 /**
  * [강사 제공 기반 시스템]

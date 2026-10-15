@@ -12,11 +12,11 @@
 Android OS
     └─ MainActivity (게임 선택)
         ├─ ShooterActivity (기존 슈팅 전체 화면과 메뉴)
-        │   └─ GameSurfaceView / GameRenderer / ShooterScene
+        │   └─ GameSurfaceView → SceneSurfaceView → GameRenderer → ShooterScene
         └─ PlatformerActivity (플랫포머 전체 화면과 메뉴)
-            └─ SceneSurfaceView / PlatformerScene
+            └─ SceneSurfaceView → GameRenderer → PlatformerScene
 
-각 게임의 Game Loop
+두 게임이 공유하는 Game Loop (GameRenderer)
     ├─ 입력 읽기
     ├─ Update(deltaTime): 이동, 충돌, 게임 상태, 점수
     └─ Render: OpenGL ES로 그리기
@@ -47,7 +47,7 @@ kr.ac.lecture.mobilegame
 │  ├─ input/                   # Touch, 가속도계, 자이로스코프
 │  ├─ collision/               # Aabb, CollisionComponent, CollisionSystem
 │  ├─ scene/                   # Scene, SceneManager
-│  └─ ui/                      # 점수/GameOver HUD 경계
+│  └─ ui/                      # 상태를 그리는 Hud<T>, 충돌 경계 DebugHud
 └─ game/                       # 학생 수정 중심
    ├─ Player.kt
    ├─ Enemy.kt
@@ -65,7 +65,7 @@ kr.ac.lecture.mobilegame
 - 가속도계와 자이로스코프 등록/해제 및 `InputSnapshot` 연결
 - Activity의 resume/pause를 게임과 센서에 연결
 - 경계가 닿는 경우를 충돌로 세지 않는 AABB 판정과 단위 테스트
-- 자동 발사, 시간 기반 적 생성/난이도 초안, 점수, GameOver
+- 자동 발사, 시간 기반 적 생성/난이도, 점수, GameOver
 - SpriteAnimation, SceneManager, ResourceManager, HUD, ObjectPool의 학습용 최소 구조
 - Player 4×4, 탄환/폭발 4×4, Enemy 4×2 오리지널 투명 Sprite Sheet 샘플
 - Player 피격/격추 4×2와 Enemy 피격/격추 4×4 별도 Texture 샘플
@@ -81,9 +81,9 @@ kr.ac.lecture.mobilegame
 - `SpriteLoader`: Resource ID로 로드하며 이름 생략 시 확장자 없는 Resource 이름을 사용합니다. Pixel Size 또는 원본 대비 Scale로 기본 크기를 지정합니다.
 - `MovementComponent`: Velocity, Max Speed, Acceleration, Deceleration을 제공합니다. 입력 방향이 일정한 구간을 시간 기준으로 적분하며 물리 엔진은 아닙니다.
 - `AABBCollisionComponent`: Sprite와 독립적인 Size/Offset을 사용합니다. Component가 없는 객체는 `CollisionSystem` 판정에서 제외합니다. Aabb 파일은 독립적으로 유지합니다.
-- `SoundManager`: 기본 4개·최대 8개 Logical Channel, Register/Play/Pause/Stop/Unregister, 3단계 Volume과 Lifecycle 연결을 제공합니다. 효과음 파일과 재생 이벤트는 학생이 추가합니다.
+- `SoundManager`: 기본 4개·최대 8개 Logical Channel, Register/Play/Pause/Stop/Unregister, 3단계 Volume과 Lifecycle 연결을 제공합니다. 샘플의 피격·폭탄 합성음은 연결되어 있으며 효과음 파일은 학생이 추가합니다.
 
-사용 예제, 좌표 단위, 호환 옵션과 한계는 [Component/Sound 가이드](docs/COMPONENT_GUIDE.md)에, 기존 기능 대조와 변경 내역은 [개선 작업 보고서](docs/IMPROVEMENT_REPORT.md)에 정리했습니다. 기존 터치 이동·자동 발사·적 생성·점수 샘플은 보존했으며 새로운 과제 정답은 추가하지 않았습니다.
+사용 예제, 좌표 단위, 호환 옵션과 한계는 [Component/Sound 가이드](docs/COMPONENT_GUIDE.md)에, 기존 기능 대조와 변경 내역은 [개선 작업 보고서](docs/IMPROVEMENT_REPORT.md)에 정리했습니다. 터치 이동·자동 발사·적 생성·점수 흐름은 유지합니다. 공통 루프와 게임별 연결을 분리한 내용, main 반영 목록은 같은 보고서에 정리했습니다.
 
 ## FPS, Tick, DeltaTime, Physics Tick
 
@@ -125,7 +125,7 @@ kr.ac.lecture.mobilegame
 16. Difficulty
 17. 학생별 확장
 
-현재 `main` 초안은 구조를 한눈에 보여주기 위해 여러 단계의 최소 구현을 함께 포함합니다. 실제 수업에서는 단계별 브랜치 또는 태그로 분리하는 것을 권장합니다.
+`main`은 기반 시스템과 간단한 예제이고, 현재 `Sample`은 두 게임의 실행 예제입니다. 실제 수업에서는 단계별 브랜치 또는 태그로 분리하는 것을 권장합니다.
 
 ## 학생 수정 가능 영역
 
@@ -170,9 +170,9 @@ if (BuildConfig.DEBUG_BLOCK) {
 - `SAMPLE_BLOCK`: 제공 샘플과 학생 실습 영역 구분. 기본값 `true`
 - `DEBUG_BLOCK`: 디버그 함수와 출력 허용. Debug 빌드는 `true`, Release 빌드는 `false`
 
-값은 `app/build.gradle.kts`의 `buildConfigField`에서 변경한 뒤 다시 빌드합니다. `ShooterScene.updateSampleRules()`가 실제 Sample Block 사용 예입니다.
+값은 `app/build.gradle.kts`의 `buildConfigField`에서 변경한 뒤 다시 빌드합니다. `ShooterScene.updateShootingRules()`가 실제 Sample Block 사용 예입니다.
 
-현재 `SAMPLE_BLOCK=false`가 끄는 것은 `updateSampleRules()`의 자동 발사와 적 생성입니다. Player의 터치 이동이나 충돌 처리 코드까지 제거하는 스위치는 아닙니다. 과제 배포 시 별도 실습 브랜치에서 제공 범위를 정하세요.
+현재 `SAMPLE_BLOCK=false`가 끄는 것은 `updateShootingRules()`의 자동 발사와 적 발사·생성 및 보스 생성입니다. Player의 터치 이동이나 충돌 처리 코드까지 제거하는 스위치는 아닙니다. 과제 배포 시 별도 실습 브랜치에서 제공 범위를 정하세요.
 
 top-level Debug Function은 `foundation.debug.DebugFunctions.kt`에 있습니다.
 
@@ -279,10 +279,10 @@ JDK 26 설치 안내와 별개로, 현재 저장소의 `gradle/gradle-daemon-jvm
 - [x] PNG 스프라이트와 `ResourceManager.texture()` 및 UV 렌더링 연결
 - [x] `SpriteAnimation.currentFrame`을 스프라이트 시트 UV에 반영
 - [x] 선택형 Component와 이름 기반 Sprite 교체, 크기/회전, 가속·감속 기반 제공
-- [x] 효과음용 Sound/Channel 기반 제공 (효과음 파일·게임 이벤트 연결은 실습)
+- [x] 효과음용 Sound/Channel 기반과 피격·폭탄 합성음 연결 (음원 파일 연결은 실습)
 - [ ] Title / Play / Result Scene 추가 및 전환
 - [ ] 점수용 Bitmap Font 또는 Android Canvas overlay 구현
-- [ ] 제거 대상 수집과 충돌 순회 비용 개선
+- [x] 슈팅의 비활성 객체 정리·충돌 단계 구분, 그리기 버퍼 재사용
 - [ ] Bullet/Enemy를 `ObjectPool`로 재사용
 - [ ] 고정 시간 간격 Physics Tick 선택 실습
 - [ ] 난이도 전략을 Scene에서 별도 클래스로 분리

@@ -9,19 +9,23 @@ import kr.ac.lecture.mobilegame.foundation.scene.Scene
 class PlatformerScene(private val world: PlatformerWorld, private val controls: DigitalInput,
                       private val painter: PlatformerPainter,
                       private val onUiChanged: (PlatformerUiSnapshot) -> Unit) : Scene {
-    private var uiElapsed = 0f
-    override fun onEnter() = onUiChanged(world.uiSnapshot())
+    private var lastUi: PlatformerUiSnapshot? = null
+    override fun onEnter() = notifyUi()
 
     override fun resize(width: Int, height: Int) = world.resizeViewport(width, height)
 
     override fun update(deltaTime: Float, input: InputSnapshot) {
         world.update(deltaTime, controls.drain())
-        uiElapsed += deltaTime
-        if (uiElapsed >= 0.1f) {
-            uiElapsed = 0f
-            onUiChanged(world.uiSnapshot())
-        }
+        notifyUi()
     }
 
     override fun draw(renderer: Renderer2D) = painter.draw(renderer, world)
+
+    private fun notifyUi() {
+        val snapshot = world.uiSnapshot()
+        if (snapshot != lastUi) {
+            lastUi = snapshot
+            onUiChanged(snapshot)
+        }
+    }
 }

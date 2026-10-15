@@ -16,7 +16,7 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(32, 32, 32, 32)
+            setPadding(dp(32), dp(32), dp(32), dp(32))
             setBackgroundColor(Color.rgb(225, 237, 213))
         }
         root.addView(TextView(this).apply {
@@ -24,7 +24,7 @@ class MainActivity : Activity() {
             textSize = 28f
             gravity = Gravity.CENTER
             setTextColor(Color.rgb(41, 56, 46))
-            setPadding(0, 0, 0, 32)
+            setPadding(0, 0, 0, dp(32))
         })
         fun addEntry(label: Int, activity: Class<out Activity>) {
             root.addView(Button(this).apply {
@@ -33,7 +33,7 @@ class MainActivity : Activity() {
                 isAllCaps = false
                 setOnClickListener { startActivity(Intent(this@MainActivity, activity)) }
             }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, 12, 0, 12) })
+                LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, dp(12), 0, dp(12)) })
         }
         addEntry(R.string.shooter_sample, ShooterActivity::class.java)
         addEntry(R.string.platformer_sample, PlatformerActivity::class.java)

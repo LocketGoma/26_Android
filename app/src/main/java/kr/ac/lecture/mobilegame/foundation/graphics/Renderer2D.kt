@@ -29,6 +29,12 @@ class Renderer2D {
     fun aspectCorrectedSize(sprite: SpriteRegion, worldWidth: Float): Vec2 =
         viewport.aspectCorrectedSize(worldWidth, sprite.widthPixels / sprite.heightPixels)
     private var program = 0
+    private var colorLocation = -1
+    private var useTextureLocation = -1
+    private var textureLocation = -1
+    // 사각형 6개 정점 × (위치 2 + UV 2). 그릴 때마다 direct buffer를 만들지 않습니다.
+    private val vertices = ByteBuffer.allocateDirect(6 * 4 * Float.SIZE_BYTES)
+        .order(ByteOrder.nativeOrder()).asFloatBuffer()
     private val vertexShader = """
         #version 300 es
         layout(location = 0) in vec2 aPosition;
@@ -65,6 +71,9 @@ class Renderer2D {
         check(status[0] == GLES30.GL_TRUE) { "Program link failed: ${GLES30.glGetProgramInfoLog(program)}" }
         GLES30.glDeleteShader(vertex)
         GLES30.glDeleteShader(fragment)
+        colorLocation = GLES30.glGetUniformLocation(program, "uColor")
+        useTextureLocation = GLES30.glGetUniformLocation(program, "uUseTexture")
+        textureLocation = GLES30.glGetUniformLocation(program, "uTexture")
         GLES30.glEnable(GLES30.GL_BLEND)
         // Android Bitmap은 premultiplied alpha이므로 GL_ONE을 사용합니다.
         GLES30.glBlendFunc(GLES30.GL_ONE, GLES30.GL_ONE_MINUS_SRC_ALPHA)
@@ -85,10 +94,12 @@ class Renderer2D {
         size: Vec2,
         tint: Color = Color.WHITE,
         rotation: Float = 0f,
+        flipX: Boolean = false,
     ) {
         drawQuad(
             center, size,
-            sprite.uLeft, sprite.vTop, sprite.uRight, sprite.vBottom,
+            if (flipX) sprite.uRight else sprite.uLeft, sprite.vTop,
+            if (flipX) sprite.uLeft else sprite.uRight, sprite.vBottom,
             tint, sprite.texture.handle, rotation,
         )
     }
@@ -108,38 +119,41 @@ class Renderer2D {
         val right = center.x + size.x / 2f
         val top = center.y + size.y / 2f
         val bottom = center.y - size.y / 2f
-        val vertices = floatArrayOf(
-            left, bottom, uLeft, vBottom,
-            right, bottom, uRight, vBottom,
-            right, top, uRight, vTop,
-            left, bottom, uLeft, vBottom,
-            right, top, uRight, vTop,
-            left, top, uLeft, vTop,
-        )
-        // 화면 비율을 반영한 Pixel 공간에서 회전한 다음 NDC로 되돌립니다.
-        for (i in vertices.indices step 4) {
-            val rotated = viewport.rotateOffset(vertices[i] - center.x, vertices[i + 1] - center.y, rotation)
-            vertices[i] = center.x + rotated.x
-            vertices[i + 1] = center.y + rotated.y
-        }
-        val buffer = ByteBuffer.allocateDirect(vertices.size * Float.SIZE_BYTES)
-            .order(ByteOrder.nativeOrder()).asFloatBuffer().apply { put(vertices); position(0) }
+        vertices.position(0)
+        putVertex(left, bottom, uLeft, vBottom, center, rotation)
+        putVertex(right, bottom, uRight, vBottom, center, rotation)
+        putVertex(right, top, uRight, vTop, center, rotation)
+        putVertex(left, bottom, uLeft, vBottom, center, rotation)
+        putVertex(right, top, uRight, vTop, center, rotation)
+        putVertex(left, top, uLeft, vTop, center, rotation)
 
         GLES30.glUseProgram(program)
-        GLES30.glUniform4f(GLES30.glGetUniformLocation(program, "uColor"), color.red, color.green, color.blue, color.alpha)
+        // 호출자는 보통의 RGBA를 전달합니다. Bitmap과 같은 premultiplied alpha로 여기서 통일합니다.
+        GLES30.glUniform4f(colorLocation, color.red * color.alpha, color.green * color.alpha,
+            color.blue * color.alpha, color.alpha)
         val useTexture = textureHandle != 0
-        GLES30.glUniform1i(GLES30.glGetUniformLocation(program, "uUseTexture"), if (useTexture) 1 else 0)
+        GLES30.glUniform1i(useTextureLocation, if (useTexture) 1 else 0)
         if (useTexture) {
             GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textureHandle)
-            GLES30.glUniform1i(GLES30.glGetUniformLocation(program, "uTexture"), 0)
+            GLES30.glUniform1i(textureLocation, 0)
         }
 
-        bindAttribute(buffer, index = 0, offsetFloats = 0)
-        bindAttribute(buffer, index = 1, offsetFloats = 2)
+        bindAttribute(vertices, index = 0, offsetFloats = 0)
+        bindAttribute(vertices, index = 1, offsetFloats = 2)
         GLES30.glDrawArrays(GLES30.GL_TRIANGLES, 0, 6)
         GLES30.glDisableVertexAttribArray(0)
         GLES30.glDisableVertexAttribArray(1)
+    }
+
+    private fun putVertex(x: Float, y: Float, u: Float, v: Float, center: Vec2, rotation: Float) {
+        if (rotation == 0f) {
+            vertices.put(x).put(y)
+        } else {
+            val offset = viewport.rotateOffset(x - center.x, y - center.y, rotation)
+            vertices.put(center.x + offset.x).put(center.y + offset.y)
+        }
+        vertices.put(u).put(v)
     }
 
     private fun bindAttribute(buffer: FloatBuffer, index: Int, offsetFloats: Int) {

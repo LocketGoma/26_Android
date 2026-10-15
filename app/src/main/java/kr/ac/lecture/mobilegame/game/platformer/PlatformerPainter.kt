@@ -22,16 +22,15 @@ class PlatformerPainter(private val art: PlatformerSprites) {
         }
         fun picture(region: SpriteRegion, x: Float, y: Float, width: Float, height: Float,
                     flip: Boolean = false, rotation: Float = 0f) {
-            val shown = if (flip) region.copy(uLeft = region.uRight, uRight = region.uLeft) else region
-            renderer.drawSprite(shown, point(x, y, camera), size(width, height), rotation = rotation)
+            renderer.drawSprite(region, point(x, y, camera), size(width, height), rotation = rotation, flipX = flip)
         }
         fun outline(bounds: Aabb, color: Color) {
             val width = bounds.right - bounds.left
-            val height = bounds.bottom - bounds.top
+            val height = bounds.maxY - bounds.minY
             val x = (bounds.left + bounds.right) / 2f
-            val y = (bounds.top + bounds.bottom) / 2f
-            rect(x, bounds.top, width, 0.025f, color)
-            rect(x, bounds.bottom, width, 0.025f, color)
+            val y = (bounds.minY + bounds.maxY) / 2f
+            rect(x, bounds.minY, width, 0.025f, color)
+            rect(x, bounds.maxY, width, 0.025f, color)
             rect(bounds.left, y, 0.025f, height, color)
             rect(bounds.right, y, 0.025f, height, color)
         }
@@ -43,7 +42,8 @@ class PlatformerPainter(private val art: PlatformerSprites) {
             if (showCollision) outline(Aabb.fromCenter(surface.x, surface.y, surface.width, surface.height), Color.WHITE)
         }
         // 다음 구역의 다시 시작할 위치를 작은 깃발로 표시합니다.
-        for (x in listOf(16f, 31.5f)) {
+        for (index in 1 until world.level.checkpoints.size) {
+            val x = world.level.checkpoints[index].x
             rect(x, 1.7f, 0.055f, 1f, Color(0.25f, 0.36f, 0.25f))
             rect(x + 0.2f, 2.05f, 0.4f, 0.25f, Color.CYAN)
         }
@@ -51,16 +51,16 @@ class PlatformerPainter(private val art: PlatformerSprites) {
         rect(47.4f, 2.9f, 0.07f, 3.4f, Color(0.35f, 0.28f, 0.16f))
         rect(47.0f, 4.35f, 0.85f, 0.55f, Color.YELLOW)
         for (pickup in world.level.pickups) {
-            if (pickup.collected || pickup.x < camera - 1f || pickup.x > camera + 17f) continue
+            if (pickup.collected || pickup.x < camera - 1f || pickup.x > camera + PlatformerLevel.VIEW_WIDTH + 1f) continue
             val region = if (pickup.kind == PickupKind.APPLE) art.apple else art.acorn
             val bob = if (pickup.inFinishPile) 0f else sin(world.elapsed * 3f + pickup.id) * 0.06f
             val tilt = if (pickup.inFinishPile) ((pickup.id % 5) - 2) * 9f else 0f
             picture(region, pickup.x, pickup.y + bob, 0.4f, 0.47f, rotation = tilt)
         }
         for (enemy in world.level.enemies) {
-            if (!enemy.alive || enemy.x < camera - 2f || enemy.x > camera + 18f) continue
+            if (!enemy.alive || enemy.x < camera - 2f || enemy.x > camera + PlatformerLevel.VIEW_WIDTH + 2f) continue
             val frames = if (enemy.kind == PlatformEnemyKind.CAT) art.cat else art.snake
-            val frame = frames[(world.elapsed * (if (enemy.kind == PlatformEnemyKind.CAT) 8f else 7f)).toInt() % 4]
+            val frame = frames[(world.elapsed * (if (enemy.kind == PlatformEnemyKind.CAT) 8f else 7f)).toInt() % frames.size]
             val height = 1.3f
             val width = if (enemy.kind == PlatformEnemyKind.CAT) height else height * 2f
             picture(frame.region, enemy.x, enemy.feet + height * (frame.feet - 0.5f), width, height, enemy.facing < 0)
@@ -79,16 +79,16 @@ class PlatformerPainter(private val art: PlatformerSprites) {
     }
 
     private fun playerFrame(world: PlatformerWorld): FrameArt = when {
-        world.state == PlatformerState.DEAD -> art.death[(world.deadElapsed * 6f).toInt().coerceIn(0, 3)]
-        world.hurtRemaining > 0f -> art.hurt[((0.4f - world.hurtRemaining) * 10f).toInt().coerceIn(0, 3)]
+        world.state == PlatformerState.DEAD -> art.death[(world.deadElapsed * 6f).toInt().coerceIn(0, art.death.lastIndex)]
+        world.hurtRemaining > 0f -> art.hurt[((PlatformerLevel.HURT_SECONDS - world.hurtRemaining) * 10f).toInt().coerceIn(0, art.hurt.lastIndex)]
         world.player.supportId == null -> art.jump[when {
             world.jumpAge < 0.05f -> 0
             abs(world.player.velocityY) < 1.1f -> 2
             world.player.velocityY > 0f -> 1
             else -> 3
         }]
-        abs(world.player.velocityX) > 0.1f -> art.run[(world.elapsed * 10f).toInt() % 4]
-        else -> art.idle[(world.elapsed * 5f).toInt() % 4]
+        abs(world.player.velocityX) > 0.1f -> art.run[(world.elapsed * 10f).toInt() % art.run.size]
+        else -> art.idle[(world.elapsed * 5f).toInt() % art.idle.size]
     }
 
     private fun point(x: Float, y: Float, camera: Float) =

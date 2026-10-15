@@ -5,6 +5,7 @@ import kr.ac.lecture.mobilegame.foundation.collision.CollisionComponent
 import kr.ac.lecture.mobilegame.foundation.component.MovementComponent
 import kr.ac.lecture.mobilegame.foundation.component.SpriteComponent
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
+import kr.ac.lecture.mobilegame.foundation.graphics.Color
 
 /**
  * GameObject의 위치와 크기, Renderer2D의 좌표 전달에 사용하는 mutable data class입니다.
@@ -26,6 +27,8 @@ abstract class GameObject(
     var movement: MovementComponent? = null
     var collision: CollisionComponent? = null
     var active: Boolean = true
+    protected open val fallbackColor: Color = Color.WHITE
+    protected val scaledSize get() = Vec2(size.x * transform.scale.x, size.y * transform.scale.y)
 
     val bounds: Aabb
         get() = collision?.bounds ?: Aabb.fromCenter(position.x, position.y,
@@ -36,5 +39,9 @@ abstract class GameObject(
         movement?.update(deltaTime)
         sprite?.update(deltaTime)
     }
-    open fun draw(renderer: Renderer2D) { sprite?.draw(renderer) }
+    /** 외형이 없을 때도 같은 Transform으로 사각형을 그려 이동·충돌 실습을 계속할 수 있습니다. */
+    open fun draw(renderer: Renderer2D) {
+        if (sprite?.currentRegion != null) sprite?.draw(renderer)
+        else renderer.drawRect(position, scaledSize, fallbackColor, transform.rotation)
+    }
 }

@@ -4,9 +4,13 @@ import kr.ac.lecture.mobilegame.BuildConfig
 import kr.ac.lecture.mobilegame.foundation.audio.SoundManager
 import kr.ac.lecture.mobilegame.foundation.audio.ToneEffect
 import kr.ac.lecture.mobilegame.foundation.collision.CollisionSystem
+import kr.ac.lecture.mobilegame.foundation.core.GameObject
+import kr.ac.lecture.mobilegame.foundation.core.DebugConfig
+import kr.ac.lecture.mobilegame.foundation.ui.DebugHud
 import kr.ac.lecture.mobilegame.foundation.debug.debugPrint
 import kr.ac.lecture.mobilegame.foundation.graphics.Color
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
+import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteRegion
 import kr.ac.lecture.mobilegame.foundation.input.InputSnapshot
 import kr.ac.lecture.mobilegame.foundation.scene.Scene
 import kr.ac.lecture.mobilegame.game.sprite.ItemSprites
@@ -32,10 +36,14 @@ class ShooterScene(
     private val explosions = mutableListOf<Explosion>()
     private val screenFlashes = mutableListOf<ScreenFlash>()
     private val hud = GameHud(uiSprites)
+    private val debugHud = DebugHud()
+    private val playerDebugGroup = listOf(player)
     private var shotTimer = 0f
     private var spawnTimer = 0f
     private var enemyShotTimer = 0f
     private var gameOverSaved = false
+    private var highScores = leaderboard?.scores().orEmpty()
+    private var lastUi: GameUiSnapshot? = null
 
     override fun onEnter() = notifyUi()
 
@@ -62,51 +70,35 @@ class ShooterScene(
 
         sound?.playTone(ToneEffect.BOMB)
         screenFlashes += ScreenFlash(Color(1f, 0.72f, 0.15f, 0.46f), 0.34f)
-        sprites?.explosion?.let {
-            explosions += Explosion(player.position.x, player.position.y, it, effectSize = 1.25f)
-        }
-        bullets.filter { it.owner == BulletOwner.ENEMY }.forEach { it.active = false }
-        enemies.filter { it.active }.toList().forEach { enemy ->
-            sprites?.impact?.let {
-                explosions += Explosion(enemy.position.x, enemy.position.y, it,
-                    effectSize = if (enemy.isBoss) 0.58f else 0.34f)
-            }
+        spawnEffect(sprites?.explosion, player, 1.25f)
+        clearEnemyBullets()
+        // 피해 처리 중 아이템/효과는 추가해도 적 목록 자체는 바꾸지 않습니다.
+        for (enemy in enemies) {
+            if (!enemy.active) continue
+            spawnEffect(sprites?.impact, enemy, if (enemy.isBoss) 0.58f else 0.34f)
             if (enemy.damage(GameConfig.BOMB_DAMAGE)) onEnemyKilled(enemy)
         }
         notifyUi()
     }
 
     override fun update(deltaTime: Float, input: InputSnapshot) {
-        if (!session.isPlaying) {
-            if (session.state == GameState.GAME_OVER) {
-                explosions.forEach { it.update(deltaTime) }
-                screenFlashes.forEach { it.update(deltaTime) }
-                explosions.removeAll { !it.active }
-                screenFlashes.removeAll { !it.active }
-            }
-            return
+        if (!session.isPlaying && session.state != GameState.GAME_OVER) return
+        if (session.isPlaying) {
+            if (session.update(deltaTime) && BuildConfig.SAMPLE_BLOCK) spawnBoss()
+            // Input → 생성 규칙 → 이동 → 충돌 결과 순서입니다.
+            player.readInput(input)
+            player.update(deltaTime)
+            if (BuildConfig.SAMPLE_BLOCK) updateShootingRules(deltaTime)
+            bullets.updateActive(deltaTime)
+            enemies.updateActive(deltaTime)
+            items.updateActive(deltaTime)
         }
-
-        val bossPhaseStarted = session.update(deltaTime)
-        if (bossPhaseStarted) spawnBoss()
-
-        player.readInput(input)
-        player.update(deltaTime)
-
-        if (BuildConfig.SAMPLE_BLOCK) updateShootingRules(deltaTime)
-
-        bullets.forEach { it.update(deltaTime) }
-        enemies.forEach { it.update(deltaTime) }
-        items.forEach { it.update(deltaTime) }
-        explosions.forEach { it.update(deltaTime) }
-        screenFlashes.forEach { it.update(deltaTime) }
-        resolveCollisions()
-
-        bullets.removeAll { !it.active }
-        enemies.removeAll { !it.active }
-        items.removeAll { !it.active }
-        explosions.removeAll { !it.active }
-        screenFlashes.removeAll { !it.active }
+        // 마지막 피격으로 Game Over가 되어도 효과는 끝까지 재생합니다.
+        explosions.updateActive(deltaTime)
+        screenFlashes.updateActive(deltaTime)
+        if (session.isPlaying) resolveCollisions()
+        removeInactiveObjects()
+        notifyUi()
     }
 
     private fun updateShootingRules(deltaTime: Float) {
@@ -129,7 +121,7 @@ class ShooterScene(
         }
 
         enemyShotTimer += deltaTime
-        val enemyFireInterval = if (session.state == GameState.BOSS) 0.75f
+        val enemyFireInterval = if (session.state == GameState.BOSS) GameConfig.BOSS_FIRE_INTERVAL_SECONDS
         else GameConfig.ENEMY_FIRE_INTERVAL_SECONDS
         if (enemyShotTimer >= enemyFireInterval) {
             enemyShotTimer -= enemyFireInterval
@@ -158,7 +150,7 @@ class ShooterScene(
     }
 
     private fun spawnBoss() {
-        enemies.filter { it.isBoss }.forEach { it.active = false }
+        enemies.forEach { if (it.isBoss) it.active = false }
         enemies += Enemy(
             x = 0f,
             speed = 0f,
@@ -168,25 +160,31 @@ class ShooterScene(
         )
         spawnTimer = 0f
         enemyShotTimer = 0f
-        notifyUi()
     }
 
     private fun resolveCollisions() {
-        bullets.filter { it.owner == BulletOwner.PLAYER && it.active }.forEach { bullet ->
-            enemies.firstOrNull { CollisionSystem.intersects(bullet, it) }?.let { enemy ->
-                bullet.active = false
-                sprites?.impact?.let {
-                    explosions += Explosion(enemy.position.x, enemy.position.y, it,
-                        effectSize = if (enemy.isBoss) 0.32f else 0.22f)
-                }
-                if (enemy.damage(GameConfig.PLAYER_BULLET_DAMAGE)) onEnemyKilled(enemy)
-            }
-        }
+        resolvePlayerBullets()
+        resolvePlayerDamage()
+        if (session.isPlaying) collectItems()
+    }
 
-        bullets.filter { it.owner == BulletOwner.ENEMY && it.active }.forEach { bullet ->
+    private fun resolvePlayerBullets() {
+        for (bullet in bullets) {
+            if (!bullet.active || bullet.owner != BulletOwner.PLAYER) continue
+            val enemy = enemies.firstOrNull { CollisionSystem.intersects(bullet, it) } ?: continue
+            bullet.active = false
+            spawnEffect(sprites?.impact, enemy, if (enemy.isBoss) 0.32f else 0.22f)
+            if (enemy.damage(GameConfig.PLAYER_BULLET_DAMAGE)) onEnemyKilled(enemy)
+        }
+    }
+
+    private fun resolvePlayerDamage() {
+        for (bullet in bullets) {
+            if (!bullet.active || bullet.owner != BulletOwner.ENEMY) continue
             if (CollisionSystem.intersects(player, bullet)) {
                 bullet.active = false
                 handlePlayerHit()
+                if (!session.isPlaying) return
             }
         }
 
@@ -194,15 +192,16 @@ class ShooterScene(
             if (!enemy.isBoss && !session.isInvincible) enemy.active = false
             handlePlayerHit()
         }
+    }
 
-        items.filter { it.active }.forEach { item ->
-            if (!CollisionSystem.intersects(player, item)) return@forEach
+    private fun collectItems() {
+        for (item in items) {
+            if (!CollisionSystem.intersects(player, item)) continue
             item.active = false
             when (item.type) {
                 ItemType.LIFE -> session.collectLife()
                 ItemType.BOMB -> session.collectBomb()
             }
-            notifyUi()
         }
     }
 
@@ -210,17 +209,11 @@ class ShooterScene(
         if (!session.takeHit()) return
         sound?.playTone(ToneEffect.HIT)
         screenFlashes += ScreenFlash(Color(1f, 0.08f, 0.04f, 0.52f), 0.28f)
-        sprites?.impact?.let {
-            explosions += Explosion(player.position.x, player.position.y, it, effectSize = 0.68f)
-        }
-        sprites?.playerHitFrames?.let {
-            explosions += Explosion(player.position.x, player.position.y, it, effectSize = 0.56f)
-        }
-        sprites?.playerDestroyedFrames?.let {
-            explosions += Explosion(player.position.x, player.position.y, it, effectSize = 0.78f)
-        }
-        notifyUi()
-        if (session.state == GameState.GAME_OVER) finishGame()
+        spawnEffect(sprites?.impact, player, 0.68f)
+        if (session.state == GameState.GAME_OVER) {
+            spawnEffect(sprites?.playerDestroyedFrames, player, 0.78f)
+            finishGame()
+        } else spawnEffect(sprites?.playerHitFrames, player, 0.56f)
     }
 
     private fun onEnemyKilled(enemy: Enemy) {
@@ -230,7 +223,7 @@ class ShooterScene(
             EnemyKind.BOSS -> GameConfig.BOSS_SCORE
         }
         session.addScore(points)
-        sprites?.explosion?.let { explosions += Explosion(enemy.position.x, enemy.position.y, it) }
+        spawnEffect(sprites?.explosion, enemy)
 
         if (Random.nextFloat() < GameConfig.ITEM_DROP_CHANCE) {
             val type = if (Random.nextBoolean()) ItemType.LIFE else ItemType.BOMB
@@ -239,34 +232,39 @@ class ShooterScene(
         }
 
         if (enemy.isBoss) {
-            bullets.filter { it.owner == BulletOwner.ENEMY }.forEach { it.active = false }
+            clearEnemyBullets()
             session.finishBoss()
             spawnTimer = 0f
             enemyShotTimer = 0f
         }
         debugPrint("score=${session.score}", display = false)
-        notifyUi()
     }
 
     private fun finishGame() {
         if (gameOverSaved) return
         gameOverSaved = true
-        leaderboard?.save(session.score)
+        highScores = leaderboard?.save(session.score).orEmpty()
         debugPrint("Game Over: score=${session.score}")
-        notifyUi()
     }
 
     override fun draw(renderer: Renderer2D) {
         if (session.state == GameState.START || session.state == GameState.LEADERBOARD) return
 
         if (session.state != GameState.GAME_OVER && session.shouldDrawPlayer()) player.draw(renderer)
-        bullets.filter { it.active }.forEach { it.draw(renderer) }
-        enemies.filter { it.active }.forEach { it.draw(renderer) }
-        items.filter { it.active }.forEach { it.draw(renderer) }
-        explosions.filter { it.active }.forEach { it.draw(renderer) }
-        screenFlashes.filter { it.active }.forEach { it.draw(renderer) }
+        bullets.drawActive(renderer)
+        enemies.drawActive(renderer)
+        items.drawActive(renderer)
+        explosions.drawActive(renderer)
+        screenFlashes.drawActive(renderer)
         val boss = enemies.firstOrNull { it.active && it.isBoss }
-        hud.draw(renderer, session, boss?.hp, boss?.let { GameConfig.bossMaxHp(session.cycle) })
+        if (BuildConfig.DEBUG_BLOCK && DebugConfig.SHOW_COLLIDER) {
+            if (session.isPlaying) debugHud.draw(renderer, playerDebugGroup)
+            debugHud.draw(renderer, bullets)
+            debugHud.draw(renderer, enemies)
+            debugHud.draw(renderer, items)
+        }
+        hud.draw(renderer, session)
+        hud.drawBossHp(renderer, boss?.hp, boss?.maxHp)
     }
 
     private fun clearWorld() {
@@ -281,11 +279,39 @@ class ShooterScene(
     }
 
     private fun notifyUi() {
-        uiListener?.onChanged(GameUiSnapshot(
+        val snapshot = GameUiSnapshot(
             state = session.state,
             score = session.score,
             bombs = session.bombs,
-            highScores = leaderboard?.scores().orEmpty(),
-        ))
+            highScores = if (session.state == GameState.LEADERBOARD) highScores else emptyList(),
+        )
+        if (snapshot != lastUi) {
+            lastUi = snapshot
+            uiListener?.onChanged(snapshot)
+        }
+    }
+
+    private fun clearEnemyBullets() {
+        bullets.forEach { if (it.owner == BulletOwner.ENEMY) it.active = false }
+    }
+
+    private fun spawnEffect(frames: List<SpriteRegion>?, target: GameObject, size: Float = 0.34f) {
+        if (!frames.isNullOrEmpty()) explosions += Explosion(target.position.x, target.position.y, frames, size)
+    }
+
+    private fun removeInactiveObjects() {
+        bullets.removeAll { !it.active }
+        enemies.removeAll { !it.active }
+        items.removeAll { !it.active }
+        explosions.removeAll { !it.active }
+        screenFlashes.removeAll { !it.active }
+    }
+
+    private fun Iterable<GameObject>.updateActive(dt: Float) {
+        for (obj in this) if (obj.active) obj.update(dt)
+    }
+
+    private fun Iterable<GameObject>.drawActive(renderer: Renderer2D) {
+        for (obj in this) if (obj.active) obj.draw(renderer)
     }
 }

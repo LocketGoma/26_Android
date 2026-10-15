@@ -2,7 +2,7 @@ package kr.ac.lecture.mobilegame.game
 
 import kotlin.math.pow
 
-/** 학생이 숫자만 바꾸며 게임 감각을 비교할 수 있도록 모아 둔 데이터 초안입니다. */
+/** 슈팅의 조정 가능한 수치입니다. 단위가 시간인 값은 초를 사용합니다. */
 object GameConfig {
     const val PLAYER_SPEED = 2.4f
     const val BULLET_SPEED = 1.8f
@@ -11,6 +11,7 @@ object GameConfig {
     const val NORMAL_PHASE_SECONDS = 100f
     const val BASE_ENEMY_SPAWN_INTERVAL_SECONDS = 1f
     const val ENEMY_FIRE_INTERVAL_SECONDS = 1.8f
+    const val BOSS_FIRE_INTERVAL_SECONDS = 0.75f
     const val BOSS_ENEMY_RATE = 0.1f
     const val INVINCIBLE_SECONDS = 5f
     const val PLAYER_MAX_LIFE = 3

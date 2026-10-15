@@ -12,14 +12,23 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import kr.ac.lecture.mobilegame.foundation.core.GameSurfaceView
+import kr.ac.lecture.mobilegame.foundation.audio.SoundManager
 import kr.ac.lecture.mobilegame.foundation.debug.DebugRuntime
 import kr.ac.lecture.mobilegame.foundation.graphics.FitViewport
 import kr.ac.lecture.mobilegame.game.GameState
 import kr.ac.lecture.mobilegame.game.GameUiSnapshot
+import kr.ac.lecture.mobilegame.game.GameUiListener
+import kr.ac.lecture.mobilegame.game.LeaderboardStore
+import kr.ac.lecture.mobilegame.game.ShooterScene
+import kr.ac.lecture.mobilegame.game.sprite.ShootingSpriteCatalog
+import kr.ac.lecture.mobilegame.game.sprite.ItemSpriteCatalog
+import kr.ac.lecture.mobilegame.game.sprite.UiSpriteCatalog
 
 /** Android Lifecycle와 네이티브 메뉴 UI를 OpenGL 게임에 연결하는 진입점입니다. */
 class ShooterActivity : Activity() {
     private lateinit var gameView: GameSurfaceView
+    private lateinit var scene: ShooterScene // 생성과 게임 명령은 GL 스레드에서만 처리합니다.
+    private lateinit var sound: SoundManager
     private lateinit var menuOverlay: LinearLayout
     private lateinit var menuScroll: ScrollView
     private lateinit var titleView: TextView
@@ -34,7 +43,16 @@ class ShooterActivity : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         SampleScreen.hideSystemBars(this)
 
-        gameView = GameSurfaceView(this, ::showGameUi, ::finish)
+        sound = SoundManager(this)
+        gameView = GameSurfaceView(this, CONTENT_ASPECT_RATIO) { resources ->
+            ShooterScene(
+                ShootingSpriteCatalog.load(resources), ItemSpriteCatalog.load(resources),
+                UiSpriteCatalog.load(resources), LeaderboardStore(applicationContext),
+                GameUiListener { snapshot ->
+                    runOnUiThread { if (!isFinishing && !isDestroyed) showGameUi(snapshot) }
+                }, sound,
+            ).also { scene = it }
+        }
         setContentView(buildContentView())
     }
 
@@ -79,12 +97,12 @@ class ShooterActivity : Activity() {
             contentDescription = getString(R.string.bomb_button)
             setBackgroundColor(Color.TRANSPARENT)
             visibility = View.GONE
-            setOnClickListener { gameView.useBomb() }
+            setOnClickListener { command { useBomb() } }
         }
         root.addView(bombTouchArea, FrameLayout.LayoutParams(dp(136), dp(88), Gravity.TOP or Gravity.END))
-        root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            if (root.width > 0 && root.height > 0) {
-                val area = FitViewport.fit(root.width, root.height, 9f / 16f)
+        gameView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            if (gameView.width > 0 && gameView.height > 0) {
+                val area = FitViewport.fit(gameView.width, gameView.height, CONTENT_ASPECT_RATIO)
                 bombTouchArea.layoutParams = FrameLayout.LayoutParams(
                     (area.width * 0.3f).toInt().coerceAtLeast(1),
                     (area.height * 0.14f).toInt().coerceAtLeast(1),
@@ -127,8 +145,8 @@ class ShooterActivity : Activity() {
         menuScroll.visibility = View.VISIBLE
         bombTouchArea.visibility = View.GONE
         titleView.text = getString(R.string.game_title)
-        setButton(primaryButton, R.string.start_game) { gameView.startGame() }
-        setButton(secondaryButton, R.string.show_leaderboard) { gameView.openLeaderboard() }
+        setButton(primaryButton, R.string.start_game) { command { startGame() } }
+        setButton(secondaryButton, R.string.show_leaderboard) { command { openLeaderboard() } }
         tertiaryButton.visibility = View.GONE
     }
 
@@ -136,9 +154,9 @@ class ShooterActivity : Activity() {
         menuScroll.visibility = View.VISIBLE
         bombTouchArea.visibility = View.GONE
         titleView.text = getString(R.string.game_over_score, score)
-        setButton(primaryButton, R.string.leaderboard) { gameView.openLeaderboard() }
-        setButton(secondaryButton, R.string.restart_game) { gameView.startGame() }
-        setButton(tertiaryButton, R.string.exit_game) { gameView.exitGame() }
+        setButton(primaryButton, R.string.leaderboard) { command { openLeaderboard() } }
+        setButton(secondaryButton, R.string.restart_game) { command { startGame() } }
+        setButton(tertiaryButton, R.string.exit_game, ::finish)
     }
 
     private fun showLeaderboard(scores: List<Int>) {
@@ -148,7 +166,7 @@ class ShooterActivity : Activity() {
             scores.mapIndexed { index, score -> getString(R.string.leaderboard_row, index + 1, score) }
                 .joinToString("\n")
         titleView.text = getString(R.string.leaderboard_contents, getString(R.string.leaderboard), rows)
-        setButton(primaryButton, R.string.back) { gameView.closeLeaderboard() }
+        setButton(primaryButton, R.string.back) { command { closeLeaderboard() } }
         secondaryButton.visibility = View.GONE
         tertiaryButton.visibility = View.GONE
     }
@@ -159,7 +177,9 @@ class ShooterActivity : Activity() {
         button.setOnClickListener { action() }
     }
 
-    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+    private fun command(action: ShooterScene.() -> Unit) = gameView.runOnGameThread {
+        if (::scene.isInitialized) scene.action()
+    }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -168,16 +188,20 @@ class ShooterActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        sound.onHostResume()
         gameView.onHostResume()
     }
 
     override fun onPause() {
         gameView.onHostPause()
+        sound.onHostPause()
         super.onPause()
     }
 
     override fun onDestroy() {
-        gameView.onHostDestroy()
+        sound.release()
         super.onDestroy()
     }
+
+    companion object { private const val CONTENT_ASPECT_RATIO = 9f / 16f }
 }

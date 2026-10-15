@@ -7,19 +7,21 @@ import kr.ac.lecture.mobilegame.foundation.physics.PlatformBody
 
 enum class PlatformerState { PLAYING, DEAD, CLEARED }
 
-data class PlatformerUiSnapshot(val state: PlatformerState, val section: Int, val life: Int,
-                               val collected: Int, val score: Int, val speed: Float, val maxSpeed: Float,
+data class PlatformerUiSnapshot(val state: PlatformerState, val life: Int,
+                               val collected: Int, val score: Int,
                                val followPlatform: Boolean, val showCollision: Boolean)
 
 /** 위치와 게임 규칙만 계산합니다. 그림, Android View, OpenGL은 이 클래스에서 사용하지 않습니다. */
 class PlatformerWorld {
     var level = PlatformerLevel()
         private set
-    val player = PlatformBody(1.4f, PlatformerLevel.FLOOR_TOP + 0.46f, 0.72f, 0.92f)
+    val player = PlatformBody(level.checkpoints.first().x,
+        PlatformerLevel.FLOOR_TOP + PlatformerLevel.PLAYER_HEIGHT / 2f,
+        PlatformerLevel.PLAYER_WIDTH, PlatformerLevel.PLAYER_HEIGHT)
     val motor = KinematicMotor()
     var state = PlatformerState.PLAYING
         private set
-    var life = 3
+    var life = PlatformerLevel.PLAYER_MAX_LIFE
         private set
     var score = 0
         private set
@@ -41,9 +43,8 @@ class PlatformerWorld {
         private set
     private var invincibleRemaining = 0f
     private var platformTime = 0f
-    private var checkpointSection = 1
+    private var checkpointIndex = 0
     private var pendingJump = false
-    val section get() = (player.x / PlatformerLevel.VIEW_WIDTH).toInt().coerceIn(0, 2) + 1
     val cameraLeft get() = (player.x - 6f).coerceIn(0f, PlatformerLevel.WIDTH - PlatformerLevel.VIEW_WIDTH)
     val blinkPlayer get() = invincibleRemaining > 0f && (elapsed / 0.09f).toInt() % 2 == 0
 
@@ -56,7 +57,7 @@ class PlatformerWorld {
         score = 0
         collected = 0
         elapsed = 0f
-        checkpointSection = 1
+        checkpointIndex = 0
         respawn()
     }
 
@@ -66,7 +67,7 @@ class PlatformerWorld {
         if (state == PlatformerState.DEAD) {
             pendingJump = false
             deadElapsed += frameTime
-            if (deadElapsed >= 0.85f) respawn()
+            if (deadElapsed >= PlatformerLevel.RESPAWN_SECONDS) respawn()
             return
         }
         if (state == PlatformerState.CLEARED) return
@@ -100,10 +101,7 @@ class PlatformerWorld {
         if (state != PlatformerState.PLAYING) return
         if (player.feet < -1f) { die(fell = true); return }
         collectItems()
-        if (player.supportId != null) {
-            if (player.x >= 31.5f) checkpointSection = 3
-            else if (player.x >= 15.5f) checkpointSection = maxOf(checkpointSection, 2)
-        }
+        if (player.supportId != null) updateCheckpoint()
         if (player.x >= PlatformerLevel.FINISH_X && player.supportId != null && player.feet < 2.5f) {
             state = PlatformerState.CLEARED
             player.velocityX = 0f
@@ -116,11 +114,11 @@ class PlatformerWorld {
             if (!enemy.alive) continue
             val head = enemy.headBounds
             val overlapsHeadX = player.x + player.width / 2f > head.left && player.x - player.width / 2f < head.right
-            if (player.velocityY <= 0f && previousFeet >= head.bottom - 0.025f &&
-                player.feet <= head.bottom && overlapsHeadX) {
+            if (player.velocityY <= 0f && previousFeet >= head.maxY - 0.025f &&
+                player.feet <= head.maxY && overlapsHeadX) {
                 enemy.stomp()
                 awardEnemy(enemy)
-                player.y = head.bottom + player.height / 2f + 0.002f
+                player.y = head.maxY + player.height / 2f + 0.002f
                 player.velocityY = 6.5f
                 player.supportId = null
                 continue // 같은 계산에서 머리 밟기와 몸통 피격이 함께 일어나지 않게 합니다.
@@ -133,7 +131,7 @@ class PlatformerWorld {
     private fun takeHit(enemyX: Float) {
         if (invincibleRemaining > 0f) return
         life -= 1
-        hurtRemaining = 0.4f
+        hurtRemaining = PlatformerLevel.HURT_SECONDS
         invincibleRemaining = 1.1f
         player.velocityX = if (player.x < enemyX) -4f else 4f
         player.velocityY = 4.5f
@@ -142,6 +140,12 @@ class PlatformerWorld {
     }
 
     private fun awardEnemy(enemy: PlatformEnemy) { score += if (enemy.kind == PlatformEnemyKind.CAT) 100 else 150 }
+
+    private fun updateCheckpoint() {
+        for (index in checkpointIndex + 1 until level.checkpoints.size) {
+            if (player.x >= level.checkpoints[index].triggerX) checkpointIndex = index
+        }
+    }
 
     private fun collectItems() {
         for (pickup in level.pickups) {
@@ -164,23 +168,23 @@ class PlatformerWorld {
 
     private fun respawn() {
         state = PlatformerState.PLAYING
-        life = 3
+        life = PlatformerLevel.PLAYER_MAX_LIFE
         deadElapsed = 0f
         hurtRemaining = 0f
         invincibleRemaining = 0f
         pendingJump = false
         platformTime = 0f
         level.surfaces.forEach { it.update(0f) }
-        player.x = when (checkpointSection) { 2 -> 16f; 3 -> 31.5f; else -> 1.4f }
+        val checkpoint = level.checkpoints[checkpointIndex]
+        player.x = checkpoint.x
         player.y = PlatformerLevel.FLOOR_TOP + player.height / 2f
         player.velocityX = 0f; player.velocityY = 0f
-        player.supportId = when (checkpointSection) { 2 -> 3; 3 -> 30; else -> 1 }
+        player.supportId = checkpoint.surfaceId
         facing = 1
         jumpAge = 100f
     }
 
-    fun uiSnapshot() = PlatformerUiSnapshot(state, section, life, collected, score, player.velocityX,
-        motor.settings.maxSpeed, followPlatform, showCollision)
+    fun uiSnapshot() = PlatformerUiSnapshot(state, life, collected, score, followPlatform, showCollision)
 
     companion object { const val MAX_STEP = 1f / 120f }
 }

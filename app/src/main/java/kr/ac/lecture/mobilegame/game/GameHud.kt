@@ -4,17 +4,14 @@ import kr.ac.lecture.mobilegame.foundation.core.Vec2
 import kr.ac.lecture.mobilegame.foundation.graphics.Color
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
 import kr.ac.lecture.mobilegame.game.sprite.UiSprites
+import kr.ac.lecture.mobilegame.foundation.ui.Hud
 
 /** 기존 UI Sprite Sheet만 사용해 플레이 중 숫자와 아이콘을 그립니다. */
-class GameHud(private val sprites: UiSprites?) {
-    fun draw(
-        renderer: Renderer2D,
-        session: GameSession,
-        bossHp: Int?,
-        bossMaxHp: Int?,
-    ) {
+class GameHud(private val sprites: UiSprites?) : Hud<GameSession> {
+    override fun draw(renderer: Renderer2D, state: GameSession) {
+        val session = state
         if (!session.isPlaying && session.state != GameState.GAME_OVER) return
-        val ui = sprites ?: return drawFallback(renderer, session, bossHp, bossMaxHp)
+        val ui = sprites ?: return drawFallback(renderer, session)
 
         renderer.drawSprite(ui.healthLabel, Vec2(-0.83f, 0.92f), Vec2(0.25f, 0.075f))
         repeat(GameConfig.PLAYER_MAX_LIFE) { index ->
@@ -45,8 +42,6 @@ class GameHud(private val sprites: UiSprites?) {
             renderer.drawSprite(onesSprite, Vec2(0.07f, 0.91f),
                 renderer.aspectCorrectedSize(onesSprite, TIMER_DIGIT_WIDTH))
         }
-
-        drawBossHp(renderer, bossHp, bossMaxHp)
     }
 
     private fun drawNumber(
@@ -63,7 +58,7 @@ class GameHud(private val sprites: UiSprites?) {
         }
     }
 
-    private fun drawBossHp(renderer: Renderer2D, hp: Int?, maxHp: Int?) {
+    fun drawBossHp(renderer: Renderer2D, hp: Int?, maxHp: Int?) {
         if (hp == null || maxHp == null || maxHp <= 0) return
         renderer.drawRect(Vec2(0f, 0.69f), Vec2(1.5f, 0.055f), Color(0.15f, 0.15f, 0.20f, 0.9f))
         val ratio = (hp.toFloat() / maxHp).coerceIn(0f, 1f)
@@ -71,10 +66,9 @@ class GameHud(private val sprites: UiSprites?) {
             Vec2(1.5f * ratio, 0.035f), Color.RED)
     }
 
-    private fun drawFallback(renderer: Renderer2D, session: GameSession, hp: Int?, maxHp: Int?) {
+    private fun drawFallback(renderer: Renderer2D, session: GameSession) {
         val lifeRatio = session.life / GameConfig.PLAYER_MAX_LIFE.toFloat()
         renderer.drawRect(Vec2(-0.9f + 0.3f * lifeRatio, 0.93f), Vec2(0.6f * lifeRatio, 0.035f), Color.CYAN)
-        drawBossHp(renderer, hp, maxHp)
     }
 
     companion object {

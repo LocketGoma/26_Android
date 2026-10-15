@@ -1,5 +1,6 @@
 package kr.ac.lecture.mobilegame.foundation.input
 
+// MELEE는 기반 기능 확장용이며 현재 플랫포머 조작부는 LEFT/RIGHT/JUMP만 연결합니다.
 enum class GameAction { LEFT, RIGHT, JUMP, MELEE }
 
 data class DigitalSnapshot(val axis: Float = 0f, val jumpPressed: Boolean = false, val meleePressed: Boolean = false)

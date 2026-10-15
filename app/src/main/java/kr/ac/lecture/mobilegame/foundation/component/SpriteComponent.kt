@@ -10,7 +10,7 @@ import kr.ac.lecture.mobilegame.foundation.graphics.sprite.SpriteRegion
 /**
  * [강사 제공 기반 시스템] 이미 로드된 Asset을 이름으로 선택합니다. GL 로딩은 하지 않습니다.
  * Animation 재생 상태는 Object별로 소유하므로 같은 Asset을 여러 Object가 공유할 수 있습니다.
- * useObjectSize=true는 기존 샘플의 NDC size를 유지하는 호환 옵션입니다.
+ * useObjectSize=true는 Asset의 픽셀 크기 대신 GameObject의 월드 크기를 사용합니다.
  */
 class SpriteComponent(private val owner: GameObject, private val useObjectSize: Boolean = false) {
     private val sprites = linkedMapOf<String, SpriteAsset>()
@@ -36,6 +36,7 @@ class SpriteComponent(private val owner: GameObject, private val useObjectSize: 
     }
 
     fun getCurrentSprite(): SpriteAsset? = current
+    val isFinished: Boolean get() = animation?.isFinished == true
     val currentRegion: SpriteRegion?
         get() = current?.frames?.get(animation?.currentFrame ?: 0)
 

@@ -10,6 +10,8 @@ enum class PlatformEnemyKind { CAT, SNAKE }
 data class PlatformPickup(val id: Int, val x: Float, val y: Float, val kind: PickupKind,
                           val inFinishPile: Boolean = false, var collected: Boolean = false)
 
+data class LevelCheckpoint(val x: Float, val surfaceId: Int, val triggerX: Float = x)
+
 data class LevelSurface(val surface: PlatformSurface, val look: SurfaceLook,
                         val fromX: Float = surface.x, val toX: Float = surface.x,
                         val travelSeconds: Float = 12f) {
@@ -22,6 +24,7 @@ data class LevelSurface(val surface: PlatformSurface, val look: SurfaceLook,
 
 /** 16칸짜리 화면 세 개를 이은 맵입니다. 배치만 바꾸어 다른 코스를 만들 수 있습니다. */
 class PlatformerLevel {
+    val checkpoints = listOf(LevelCheckpoint(1.4f, 1), LevelCheckpoint(16f, 3, 15.5f), LevelCheckpoint(31.5f, 30))
     val surfaces = listOf(
         ground(1, 0f, 5f), ground(2, 6.6f, 10.6f), ground(3, 12.1f, 18f),
         ledge(4, 3.1f, 4.7f, 2.35f), ledge(5, 7.5f, 9.3f, 2.7f),
@@ -63,6 +66,11 @@ class PlatformerLevel {
         const val WIDTH = VIEW_WIDTH * 3f
         const val FLOOR_TOP = 1.2f
         const val FINISH_X = 46.2f
+        const val PLAYER_WIDTH = 0.72f
+        const val PLAYER_HEIGHT = 0.92f
+        const val PLAYER_MAX_LIFE = 3
+        const val HURT_SECONDS = 0.4f
+        const val RESPAWN_SECONDS = 0.85f
         private fun ground(id: Int, left: Float, right: Float) = LevelSurface(
             PlatformSurface(id, (left + right) / 2f, FLOOR_TOP / 2f, right - left, FLOOR_TOP), SurfaceLook.GROUND)
         private fun ledge(id: Int, left: Float, right: Float, top: Float) = LevelSurface(

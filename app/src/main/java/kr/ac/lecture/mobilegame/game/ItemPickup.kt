@@ -16,12 +16,10 @@ class ItemPickup(
     val type: ItemType,
     private val region: SpriteRegion?,
 ) : GameObject(Vec2(x, y), Vec2(0.14f, 0.07f)) {
+    override val fallbackColor = if (type == ItemType.LIFE) Color.CYAN else Color.YELLOW
     init {
         collision = AABBCollisionComponent(transform, size.copy())
-        movement = MovementComponent(transform, maxSpeed = 0.24f).apply {
-            setMoveDirection(0f, -1f)
-            velocity.y = -0.24f
-        }
+        movement = MovementComponent.constantVelocity(transform, 0f, -0.24f)
     }
 
     override fun update(deltaTime: Float) {
@@ -32,11 +30,13 @@ class ItemPickup(
 
     override fun draw(renderer: Renderer2D) {
         if (region != null) {
-            renderer.drawSprite(region, position, renderer.aspectCorrectedSize(region, 0.14f),
+            val drawn = renderer.aspectCorrectedSize(region, size.x)
+            drawn.x *= transform.scale.x
+            drawn.y *= transform.scale.y
+            renderer.drawSprite(region, position, drawn,
                 rotation = transform.rotation)
         } else {
-            renderer.drawRect(position, size,
-                if (type == ItemType.LIFE) Color.CYAN else Color.YELLOW, transform.rotation)
+            super.draw(renderer)
         }
     }
 }

@@ -10,6 +10,7 @@ class ScreenFlash(
     private val color: Color,
     private val durationSeconds: Float,
 ) : GameObject(Vec2(), Vec2(2f, 2f)) {
+    init { require(durationSeconds.isFinite() && durationSeconds > 0f) }
     private var elapsed = 0f
 
     override fun update(deltaTime: Float) {
@@ -20,6 +21,6 @@ class ScreenFlash(
     override fun draw(renderer: Renderer2D) {
         val alpha = (1f - elapsed / durationSeconds).coerceIn(0f, 1f) * color.alpha
         renderer.drawRect(position, size,
-            Color(color.red * alpha, color.green * alpha, color.blue * alpha, alpha))
+            color.copy(alpha = alpha))
     }
 }
