@@ -12,7 +12,7 @@ import android.opengl.GLUtils
 data class Texture(val handle: Int, val width: Int, val height: Int)
 
 /** OpenGL Resource의 생성과 해제를 한곳에서 담당하는 Resource Manager입니다(Unity Resources/Unreal Asset Manager 대응). */
-class ResourceManager(private val context: Context) {
+class ResourceManager(private val context: Context, private val nearestFiltering: Boolean = false) {
     private val textures = mutableMapOf<Int, Texture>()
 
     // Android Resource ID의 entry name은 파일 확장자를 포함하지 않습니다.
@@ -25,8 +25,9 @@ class ResourceManager(private val context: Context) {
         val handles = IntArray(1)
         GLES30.glGenTextures(1, handles, 0)
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, handles[0])
-        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR)
-        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR)
+        val filter = if (nearestFiltering) GLES30.GL_NEAREST else GLES30.GL_LINEAR
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, filter)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, filter)
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE)
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE)
         val width = bitmap.width

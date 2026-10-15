@@ -6,6 +6,7 @@ import android.opengl.GLSurfaceView
 import kr.ac.lecture.mobilegame.foundation.input.InputController
 import kr.ac.lecture.mobilegame.foundation.input.SensorInput
 import kr.ac.lecture.mobilegame.foundation.audio.SoundManager
+import kr.ac.lecture.mobilegame.foundation.graphics.FitViewport
 import kr.ac.lecture.mobilegame.game.GameUiListener
 import kr.ac.lecture.mobilegame.game.GameUiSnapshot
 
@@ -29,9 +30,13 @@ class GameSurfaceView(
 
     init {
         setEGLContextClientVersion(3)
+        preserveEGLContextOnPause = true
         setRenderer(gameRenderer)
         renderMode = RENDERMODE_CONTINUOUSLY
-        setOnTouchListener { _, event -> input.onTouch(event, width, height) }
+        setOnTouchListener { _, event ->
+            if (width > 0 && height > 0) input.onTouch(event, width, height,
+                FitViewport.fit(width, height, 9f / 16f)) else false
+        }
     }
 
     fun onHostResume() {
@@ -42,6 +47,7 @@ class GameSurfaceView(
     }
 
     fun onHostPause() {
+        clearInput()
         gameRenderer.pause()
         sound.onHostPause()
         sensorInput.stop()
@@ -59,4 +65,5 @@ class GameSurfaceView(
     fun closeLeaderboard() = queueEvent(gameRenderer::closeLeaderboard)
     fun useBomb() = queueEvent(gameRenderer::useBomb)
     fun exitGame() = queueEvent(gameRenderer::exitGame)
+    fun clearInput() = input.clearTouch()
 }

@@ -1,6 +1,7 @@
 package kr.ac.lecture.mobilegame.foundation.input
 
 import android.view.MotionEvent
+import kr.ac.lecture.mobilegame.foundation.graphics.FitViewport
 
 /**
  * 터치와 센서 Callback에서 수집한 입력 상태를 담는 immutable data class입니다.
@@ -22,24 +23,27 @@ class InputController {
 
     fun snapshot(): InputSnapshot = latest
 
-    fun onTouch(event: MotionEvent, width: Int, height: Int): Boolean {
+    @Synchronized fun onTouch(event: MotionEvent, width: Int, height: Int,
+                             area: FitViewport = FitViewport(0, 0, width.coerceAtLeast(1), height.coerceAtLeast(1))): Boolean {
         if (width <= 0 || height <= 0) return false
-        val x = event.x / width * 2f - 1f
-        val y = 1f - event.y / height * 2f
+        val point = area.toNdc(event.x, event.y)
+        if (point == null) { clearTouch(); return true }
         latest = latest.copy(
             touching = event.actionMasked != MotionEvent.ACTION_UP &&
                 event.actionMasked != MotionEvent.ACTION_CANCEL,
-            worldX = x.coerceIn(-1f, 1f),
-            worldY = y.coerceIn(-1f, 1f),
+            worldX = point.first,
+            worldY = point.second,
         )
         return true
     }
 
-    fun updateAccelerometer(x: Float, y: Float) {
+    @Synchronized fun clearTouch() { latest = latest.copy(touching = false) }
+
+    @Synchronized fun updateAccelerometer(x: Float, y: Float) {
         latest = latest.copy(accelerometerX = x, accelerometerY = y)
     }
 
-    fun updateGyroscope(z: Float) {
+    @Synchronized fun updateGyroscope(z: Float) {
         latest = latest.copy(gyroscopeZ = z)
     }
 }

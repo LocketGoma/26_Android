@@ -6,6 +6,7 @@ import kr.ac.lecture.mobilegame.foundation.input.InputSnapshot
 /** Unity Scene / Unreal Level에 대응하는, 한 화면의 상태와 규칙입니다. */
 interface Scene {
     fun onEnter() = Unit
+    fun resize(width: Int, height: Int) = Unit
     fun update(deltaTime: Float, input: InputSnapshot)
     fun draw(renderer: Renderer2D)
     fun onExit() = Unit
@@ -25,5 +26,6 @@ class SceneManager(initialScene: Scene) {
     }
 
     fun update(deltaTime: Float, input: InputSnapshot) = current.update(deltaTime, input)
+    fun resize(width: Int, height: Int) = current.resize(width, height)
     fun draw(renderer: Renderer2D) = current.draw(renderer)
 }

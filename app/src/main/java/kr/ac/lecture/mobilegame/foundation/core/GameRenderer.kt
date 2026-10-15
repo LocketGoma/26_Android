@@ -4,6 +4,7 @@ import android.content.Context
 import android.opengl.GLES30
 import android.opengl.GLSurfaceView
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
+import kr.ac.lecture.mobilegame.foundation.graphics.FitViewport
 import kr.ac.lecture.mobilegame.foundation.graphics.ResourceManager
 import kr.ac.lecture.mobilegame.foundation.input.InputController
 import kr.ac.lecture.mobilegame.foundation.scene.SceneManager
@@ -58,8 +59,10 @@ class GameRenderer(
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
-        GLES30.glViewport(0, 0, width, height)
-        if (width > 0 && height > 0) renderer.setViewport(width, height)
+        if (width <= 0 || height <= 0) return
+        val area = FitViewport.fit(width, height, 9f / 16f)
+        GLES30.glViewport(area.left, height - area.top - area.height, area.width, area.height)
+        renderer.setViewport(area.width, area.height)
     }
 
     override fun onDrawFrame(gl: GL10?) {

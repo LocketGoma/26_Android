@@ -1,5 +1,16 @@
 <resources>
     <string name="app_name">모바일 게임 기반 시스템</string>
+    <string name="sample_menu_title">게임 샘플 선택</string>
+    <string name="shooter_sample">슈팅게임 샘플</string>
+    <string name="platformer_sample">플랫포머 샘플</string>
+    <string name="move_left">◀</string>
+    <string name="move_right">▶</string>
+    <string name="jump">▲</string>
+    <string name="follow_platform_on">발판 따라가기: 켜짐</string>
+    <string name="follow_platform_off">발판 따라가기: 꺼짐</string>
+    <string name="show_collision">충돌 영역 보기</string>
+    <string name="hide_collision">충돌 영역 숨기기</string>
+    <string name="platformer_clear">FINISH</string>
     <string name="game_title">무한루프 슈팅</string>
     <string name="start_game">시작하기</string>
     <string name="show_leaderboard">하이스코어 / 리더보드 보기</string>

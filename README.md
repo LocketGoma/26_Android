@@ -4,23 +4,22 @@
 
 반복해서 필요한 초기 코드를 흔히 **보일러플레이트**라고도 부릅니다. 엄밀히 말하면 보일러플레이트는 기반 시스템 자체보다 그것을 구성하고 연결하는 반복 코드에 가깝기 때문에 두 용어가 완전히 같지는 않습니다. 다만 이 강의와 프로젝트에서는 처음 한 번만 이 차이를 소개하고, 이후 공통 기반 기능을 이해하기 쉬운 **기반 시스템**이라는 표현으로 통일합니다.
 
-현재 결과물은 완성 게임이 아니라 드래곤플라이트/1945 스타일 세로 자동 슈팅으로 확장할 수 있는 **구조 초안**입니다. 색 사각형만으로도 터치 이동, 자동 발사, 적 생성, AABB 충돌, 점수와 GameOver 흐름을 실행할 수 있습니다.
+`Sample` 브랜치는 앱 첫 화면에서 **세로 슈팅**과 **가로 플랫포머**를 고를 수 있습니다. 기존 슈팅 전체 화면은 `ShooterActivity`, 신규 플랫포머는 `PlatformerActivity`에 있으며 `MainActivity`는 게임 선택만 담당합니다. 플랫포머는 화면 세 개 분량의 점프 구역, 이동 발판으로 건너는 큰 구덩이, 적과 아이템 더미가 있는 피니시로 구성했습니다. [조작 방법과 코드 안내](docs/PLATFORMER_SAMPLE.md)를 참고하세요.
 
 ## 핵심 구조
 
 ```text
 Android OS
-    └─ MainActivity / Lifecycle
-        └─ GameSurfaceView
-            ├─ Touch + Sensor → InputSnapshot
-            └─ GLSurfaceView.Renderer (Render Thread)
-                └─ Game Loop
-                    ├─ Update(deltaTime)
-                    │   ├─ Player / Enemy / Bullet
-                    │   ├─ AABB Collision
-                    │   └─ Game State / Score
-                    └─ Render
-                        └─ OpenGL ES → GPU
+    └─ MainActivity (게임 선택)
+        ├─ ShooterActivity (기존 슈팅 전체 화면과 메뉴)
+        │   └─ GameSurfaceView / GameRenderer / ShooterScene
+        └─ PlatformerActivity (플랫포머 전체 화면과 메뉴)
+            └─ SceneSurfaceView / PlatformerScene
+
+각 게임의 Game Loop
+    ├─ 입력 읽기
+    ├─ Update(deltaTime): 이동, 충돌, 게임 상태, 점수
+    └─ Render: OpenGL ES로 그리기
 ```
 
 `onDrawFrame()`이 프레임마다 호출되고, `GameClock`이 `System.nanoTime()`으로 DeltaTime을 계산합니다. 상태 변경은 `update`, 화면 출력은 `draw`에서 수행합니다. Android Main Thread에 직접 무한 반복문을 만들지 않습니다.
@@ -31,7 +30,7 @@ Android OS
 |---|---|---|---|
 | 기반 시스템 | `foundation.*` | 강사가 우선 제공, 지정 실습에서만 수정 | Game Loop, DeltaTime, Renderer, Input, Sensor, Collision, Scene, UI, Texture, Animation, ResourceManager, ObjectPool |
 | 게임 고유 로직 | `game.*` | 학생이 주로 수정 | Player, Enemy, Bullet, 자동 발사, 생성 규칙, 점수, 난이도, GameOver |
-| Android 연결 | `MainActivity` | 생명주기 실습에서 확인 | onCreate/onResume/onPause/onDestroy |
+| Android 연결 | `MainActivity`, `ShooterActivity`, `PlatformerActivity` | 화면 전환과 생명주기 실습에서 확인 | onCreate/onResume/onPause/onDestroy |
 
 패키지의 경계는 접근 제한을 위한 보안 장치가 아니라 **책임을 읽는 연습**을 위한 장치입니다. 기반 시스템을 바꿀 때는 그 변경이 모든 게임 객체에 미치는 영향을 먼저 설명할 수 있어야 합니다.
 
@@ -73,7 +72,7 @@ kr.ac.lecture.mobilegame
 - 회색 바닥의 체력·폭탄 빈 케이스, 푸른 항공폭탄, 숫자 0~9, HEALTH/BOMB/SCORE를 담은 정적 UI 5×4 Texture
 - 체력 회복/폭탄 획득용 정적 필드 아이템 2×1 Texture와 별도 `ItemSpriteCatalog`
 
-기본 장면은 제공된 Sprite Sheet를 `ResourceManager`로 읽어 Texture와 Animation 흐름을 보여 줍니다. 각 게임 객체에는 Texture가 없을 때 색 사각형으로 대신 그리는 경로도 남겨 두어 초기 렌더링 실습에 사용할 수 있습니다. OBB는 필수 범위에서 구현하지 않고 `CollisionComponent`의 선택 심화 TODO로 남겼습니다. 고정 Physics Tick, 멀티터치, 텍스트/폰트 UI, 긴 BGM 재생, 저장, NDK(C++)는 후속 확장 항목입니다.
+슈팅 장면은 제공된 Sprite Sheet를 `ResourceManager`로 읽어 Texture와 Animation 흐름을 보여 줍니다. 각 슈팅 객체에는 Texture가 없을 때 색 사각형으로 대신 그리는 경로도 남겨 두어 초기 렌더링 실습에 사용할 수 있습니다. 플랫포머는 별도 도트 시트를 사용하며 이동 버튼과 점프 버튼을 동시에 누를 수 있습니다. OBB는 필수 범위에서 구현하지 않고 `CollisionComponent`의 선택 심화 TODO로 남겼습니다. 고정 Physics Tick, GL 텍스트/폰트 UI, 긴 BGM 재생, 저장 기능 확장, NDK(C++)는 후속 실습 항목입니다.
 
 ### 선택형 Component와 Sound
 
@@ -207,7 +206,7 @@ Kotlin에서는 간단한 조합에 문자열 템플릿(`"score=$score"`)을 우
 3. Gradle Sync를 실행합니다.
 4. OpenGL ES 3.0을 지원하는 에뮬레이터 또는 Android 7.0(API 24) 이상 기기를 선택합니다.
 5. `app` 실행 구성을 실행합니다.
-6. 화면을 누르거나 드래그하면 청록색 Player가 이동하고 자동으로 탄환을 발사합니다.
+6. 첫 화면에서 슈팅을 고르고 시작하면 세로 화면에서 기존 터치 이동·자동 발사 게임을 플레이합니다. 플랫포머는 가로 전체 화면으로 열립니다. 게임 화면 위 왼쪽의 ◀·▶와 오른쪽의 ▲로 이동·점프하며, 적의 머리를 밟아 처리합니다.
 
 명령행에서는 프로젝트 루트에서 다음 명령으로 확인할 수 있습니다.
 

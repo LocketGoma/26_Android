@@ -2,7 +2,7 @@
 
 참고 캐릭터의 크림색 몸, 갈색 눈, 작은 분홍 코, 큰 줄무늬 꼬리를 사용했습니다. 사망은 밀대 없이 납작해져 울먹이는 동작입니다. 배경은 옅은 풀숲 실루엣으로 단순화했고, 지면과 공중 발판의 평평한 윗면이 눈에 띄도록 색을 구분했습니다.
 
-스프라이트 제작을 마쳤습니다. 게임에 그림을 연결하거나 밟기 판정을 추가하는 작업은 아직 하지 않았습니다. 빌드와 Git 커밋도 진행하지 않았습니다.
+`Sample`의 플랫포머에서 이 스프라이트를 사용합니다. 게임 연결과 머리 밟기·몸통 피격 처리 위치는 [플랫포머 샘플 안내](PLATFORMER_SAMPLE.md)에 정리했습니다. 빌드와 기기 실행은 아직 확인하지 않았습니다.
 
 ## 파일과 재생 순서
 
@@ -27,15 +27,15 @@ PNG 위치: `app/src/main/res/drawable-nodpi/`. 각 시트의 그림 번호는 �
 
 ## Android 연결 위치
 
-기존 `foundation/graphics/sprite/SpriteSheet.kt`를 그대로 사용할 수 있습니다. 예를 들어 플레이어 시트를 `SpriteSheet(resources.texture(R.drawable.platformer_player_idle), 2, 2)`로 읽고, `region(index % 2, index / 2)`로 순서대로 선택합니다. 이 예제는 연결 방법 설명이며 게임에 적용한 코드는 아닙니다.
+`game/platformer/PlatformerSprites.kt`가 기존 `foundation/graphics/sprite/SpriteSheet.kt`를 사용합니다. 예를 들어 플레이어 시트를 `SpriteSheet(resources.texture(R.drawable.platformer_player_idle), 2, 2)`로 읽고, `region(index % 2, index / 2)`로 순서대로 선택합니다.
 
-`foundation/graphics/ResourceManager.kt`는 현재 모든 텍스처에 `GL_LINEAR`를 사용합니다. 도트가 흐려지지 않도록 향후 플랫포머 리소스에 한해 `GL_NEAREST`를 선택할 수 있게 확장하는 편이 좋습니다. 기존 슈팅의 필터를 일괄 변경하지 않습니다. 이미지의 왼쪽 보기에는 UV 좌우 반전을 사용하면 됩니다.
+`foundation/graphics/ResourceManager.kt`는 기본으로 `GL_LINEAR`를 사용합니다. 플랫포머에서는 `nearestFiltering = true`로 생성해 도트용 `GL_NEAREST`를 사용합니다. 기존 슈팅의 필터는 유지합니다. 왼쪽을 볼 때는 `PlatformerPainter`에서 UV의 좌우를 뒤집습니다.
 
 Render는 동작에 맞는 Sprite 프레임을 골라 캐릭터의 발 위치에 맞춰 그립니다. 이동·충돌은 `PlatformBody`에서 따로 계산합니다. `visibleBoundsInCell`의 아래쪽 값을 사용하면 그림 속 발바닥을 발판 높이에 맞출 수 있습니다. 사망할 때 그림이 납작해져도 충돌 크기는 자동으로 줄이지 않습니다. 사망 상태에서 충돌을 끌지는 게임 규칙으로 정합니다.
 
 ## 적을 밟았는지 확인하는 방법
 
-고양이와 뱀에는 이동 프레임만 있습니다. 공격·피격·사망 애니메이션은 추가하지 않았습니다. 게임에 연결할 때는 다음과 같이 처리합니다.
+고양이와 뱀에는 이동 프레임만 있습니다. 공격·피격·사망 애니메이션은 추가하지 않았습니다. `PlatformerWorld`와 `PlatformEnemy`에서 다음과 같이 처리합니다.
 
 - 고양이: 머리 위에 내려앉을 때 유효한 밟기로 처리합니다. 옆구리와 몸통 접촉은 플레이어 피격입니다.
 - 뱀: 오른쪽에 들린 둥근 머리만 밟을 수 있습니다. 길게 이어진 몸과 꼬리를 위에서 밟아도 플레이어 피격입니다.
@@ -55,4 +55,4 @@ Render는 동작에 맞는 Sprite 프레임을 골라 캐릭터의 발 위치에
 
 내장 `image_gen` 도구로 만들었고 선택한 PNG를 픽셀 변경 없이 저장했습니다. 생성 프롬프트는 `assets/platformer/generation_prompts.json`에 남겼습니다. 프롬프트 파일은 `.gitignore`에 등록해 이 컴퓨터에만 보관하고 Git 커밋에는 포함하지 않습니다. 참고 원본은 저장소에 복사하지 않았습니다.
 
-최종 PNG 10개를 눈으로 확인하고, 파일 크기·색상 모드·투명도·시트 비율·빈 프레임 여부도 확인했습니다. Android 빌드와 기기 실행은 사용자가 직접 진행하기로 해 실행하지 않았습니다. 게임에 연결한 뒤의 화면과 충돌 동작은 아직 확인하지 않았습니다.
+제작 시 PNG 10개를 눈으로 확인하고, 파일 크기·색상 모드·투명도·시트 비율·빈 프레임 여부도 확인했습니다. 이후 `Sample`의 플랫포머 코드에 연결했습니다. Android 빌드와 기기 실행은 사용자가 직접 진행하기로 해 실행하지 않았습니다. 게임에 연결한 뒤의 화면과 충돌 동작은 아직 확인하지 않았습니다.
