@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>플랫포머 스프라이트 미리보기</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f5f4ee; color: #29382e; font: 16px/1.6 system-ui, sans-serif; }
+  main { max-width: 1060px; margin: 32px auto; padding: 0 24px; }
+  h1 { font-size: 26px; margin-bottom: 6px; }
+  p { margin-top: 0; }
+  .controls { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; margin: 20px 0; }
+  button, select { font: inherit; padding: 7px 12px; }
+  canvas { display: block; width: 100%; background: #dfecd1; image-rendering: pixelated; border: 1px solid #a8b696; }
+  .legend { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 10px; color: #52614e; }
+  small { color: #64705f; }
+</style>
+<main>
+  <h1>플랫포머 스프라이트 미리보기</h1>
+  <p>옅은 풀숲 배경과 뚜렷한 발판 위에서 애니메이션을 확인합니다.</p>
+  <div class="controls">
+    <label>캐릭터 동작 <select id="state">
+      <option value="idle">Idle</option><option value="run">이동</option>
+      <option value="jump">점프</option><option value="hurt">피격</option><option value="death">납작하게 울먹이는 사망</option>
+    </select></label>
+    <button id="play">일시정지</button><button id="restart">처음부터</button>
+    <label><input type="checkbox" id="flip"> 왼쪽 보기</label>
+    <label><input type="checkbox" id="bounds"> 프레임 경계</label>
+  </div>
+  <canvas width="960" height="540" id="scene" aria-label="캐릭터, 적, 아이템, 잔디 지면과 이동하는 나무 발판의 아트 미리보기"></canvas>
+  <div class="legend"><span>초록 윗면: 잔디 지면</span><span>황금색 윗면: 공중·이동 발판</span><span>적: 고양이 1×1, 뱀 2×1</span></div>
+  <p><small>아트 배치·재생 확인용입니다. 이동 발판의 좌우 이동은 시각적 예시이며 게임 물리와 충돌은 실행하지 않습니다. 점프는 프레임 확인용 시간 재생입니다.</small></p>
+  <p id="loadStatus">PNG 로드 중…</p>
+</main>
+<script src="manifest.js"></script>
+<script>
+const canvas = document.getElementById('scene');
+const ctx = canvas.getContext('2d');
+const config = new Map(window.platformerAssets.assets.map(asset => [asset.id, asset]));
+const images = new Map();
+const input = document.getElementById('state');
+let paused = false, elapsed = 0, actionTime = 0, previous = 0;
+function frame(id, seconds, forceIndex) {
+  const asset = config.get(id);
+  const index = forceIndex ?? (asset.loop ? Math.floor(seconds * asset.suggestedFps) % asset.frames.length :
+    Math.min(asset.frames.length - 1, Math.floor(seconds * (asset.suggestedFps || 1))));
+  return {asset, image: images.get(id), data: asset.frames[index]};
+}
+function sprite(id, x, feet, width, height, seconds, forceIndex, flip = false) {
+  const {asset, image, data} = frame(id, seconds, forceIndex);
+  const [u0,v0,u1,v1] = data.uv;
+  const bottom = data.visibleBoundsInCell?.[3] ?? 1;
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(feet));
+  if (flip) ctx.scale(-1, 1);
+  const top = -height * bottom;
+  ctx.drawImage(image, u0*asset.width, v0*asset.height, (u1-u0)*asset.width, (v1-v0)*asset.height,
+    -width/2, top, width, height);
+  if (document.getElementById('bounds').checked) {
+    ctx.strokeStyle = '#3e668a'; ctx.strokeRect(-width/2, top, width, height);
+  }
+  ctx.restore();
+}
+function platform(index, x, y, width, height) {
+  const {asset,image,data} = frame('platformer_platforms', 0, index);
+  const [u0,v0,u1,v1] = data.uv;
+  const [l,t,r,b] = data.visibleBoundsInCell;
+  const cellWidth = (u1-u0)*asset.width, cellHeight = (v1-v0)*asset.height;
+  ctx.drawImage(image, u0*asset.width+l*cellWidth, v0*asset.height+t*cellHeight,
+    (r-l)*cellWidth, (b-t)*cellHeight, Math.round(x), y, width, height);
+}
+function render(now) {
+  if (previous && !paused) { const dt = Math.min((now-previous)/1000, .05); elapsed += dt; actionTime += dt; }
+  previous = now;
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0,0,960,540);
+  ctx.drawImage(images.get('platformer_background_grass'),0,0,960,540);
+  platform(0,0,452,960,88);
+  platform(1,355+Math.sin(elapsed)*32,315,240,45);
+  sprite('platformer_player_'+input.value,470,315,96,96,actionTime,undefined,document.getElementById('flip').checked);
+  sprite('platformer_enemy_cat_walk',760,452,96,96,elapsed);
+  sprite('platformer_enemy_snake_slither',215,452,192,96,elapsed);
+  sprite('platformer_items',125,397,38,38,0,0);
+  sprite('platformer_items',555,283,38,38,0,1);
+  requestAnimationFrame(render);
+}
+input.addEventListener('change', () => { actionTime = 0; });
+document.getElementById('restart').onclick = () => { actionTime = 0; elapsed = 0; };
+document.getElementById('play').onclick = event => { paused = !paused; event.target.textContent = paused ? '재생' : '일시정지'; };
+Promise.all([...config.values()].map(asset => new Promise((resolve,reject) => {
+  const image = new Image();
+  image.onload = () => { images.set(asset.id,image); resolve(); };
+  image.onerror = () => reject(new Error(asset.file));
+  image.src = asset.file;
+}))).then(() => {
+  document.getElementById('loadStatus').textContent = '10개 PNG 로드 완료. 비반복 동작은 마지막 프레임을 유지합니다.';
+  requestAnimationFrame(render);
+}).catch(error => {
+  document.getElementById('loadStatus').textContent = '파일을 읽을 수 없습니다: '+error.message+' / 원본 폴더 구조를 유지해 주세요.';
+});
+</script>
+</html>

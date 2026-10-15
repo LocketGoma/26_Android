@@ -3,7 +3,7 @@ package kr.ac.lecture.mobilegame.foundation.physics
 import kr.ac.lecture.mobilegame.foundation.collision.Aabb
 import kotlin.math.abs
 
-/** 미터와 유사한 논리 단위. +Y는 위쪽이며 Sprite나 Android에 의존하지 않습니다. */
+/** 게임 안에서 정한 길이 단위를 사용합니다. +Y는 위쪽이며 그림이나 Android 화면과 따로 계산합니다. */
 class PlatformBody(var x: Float, var y: Float, val width: Float = 0.7f, val height: Float = 1f) {
     var velocityX = 0f
     var velocityY = 0f
@@ -39,7 +39,7 @@ data class MotorSettings(
     val jumpSpeed: Float = 9f,
 )
 
-/** 축별 이동과 충돌. 고속 물체의 완전한 연속 충돌이나 압착은 다루지 않는 강의용 최소 구현입니다. */
+/** 가로·세로 이동과 충돌을 따로 계산합니다. 빠른 물체의 통과나 발판 사이에 끼이는 상황은 추가 처리가 필요합니다. */
 class KinematicMotor(val settings: MotorSettings = MotorSettings()) {
     fun step(body: PlatformBody, surfaces: List<PlatformSurface>, axis: Float, jump: Boolean,
              dt: Float, followPlatform: Boolean = true) {
@@ -50,7 +50,7 @@ class KinematicMotor(val settings: MotorSettings = MotorSettings()) {
             body.x + body.width / 2f > support.left - support.deltaX &&
             body.x - body.width / 2f < support.right - support.deltaX
 
-        // 점프는 먼저 접지를 해제하므로 해당 프레임부터 발판을 추종하지 않습니다.
+        // 점프하면 발판을 떠나므로 이번 계산부터 발판의 이동량을 캐릭터에 더하지 않습니다.
         if (jump && wasSupported) body.velocityY = settings.jumpSpeed
         else if (wasSupported && followPlatform) {
             body.x += support!!.deltaX
