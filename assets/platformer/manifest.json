@@ -1,0 +1,875 @@
+{
+  "schema": 1,
+  "generator": "built-in image_gen",
+  "frameOrder": "row-major, top-left origin",
+  "status": "art assets only; no game integration",
+  "assets": [
+    {
+      "id": "platformer_player_idle",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_player_idle.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "columns": 2,
+      "rows": 2,
+      "logicalDisplaySize": [
+        64,
+        64
+      ],
+      "suggestedFps": 5,
+      "loop": true,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            0.5,
+            0.5
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.06858,
+            0.25837,
+            0.9378,
+            0.92344
+          ]
+        },
+        {
+          "index": 1,
+          "uv": [
+            0.5,
+            0.0,
+            1.0,
+            0.5
+          ],
+          "pixelRectRounded": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.07815,
+            0.27113,
+            0.95694,
+            0.91866
+          ]
+        },
+        {
+          "index": 2,
+          "uv": [
+            0.0,
+            0.5,
+            0.5,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.05901,
+            0.16427,
+            0.96013,
+            0.8437
+          ]
+        },
+        {
+          "index": 3,
+          "uv": [
+            0.5,
+            0.5,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.04147,
+            0.22488,
+            0.93939,
+            0.85486
+          ]
+        }
+      ],
+      "sha256": "4c4f2551a3fbad5ba4e2c090547ba6c5c414d2ee578c88f8b7efe54635a72a12"
+    },
+    {
+      "id": "platformer_player_run",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_player_run.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "columns": 2,
+      "rows": 2,
+      "logicalDisplaySize": [
+        64,
+        64
+      ],
+      "suggestedFps": 10,
+      "loop": true,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            0.5,
+            0.5
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.0319,
+            0.2201,
+            0.9681,
+            0.91866
+          ]
+        },
+        {
+          "index": 1,
+          "uv": [
+            0.5,
+            0.0,
+            1.0,
+            0.5
+          ],
+          "pixelRectRounded": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.04785,
+            0.23923,
+            0.96491,
+            0.91228
+          ]
+        },
+        {
+          "index": 2,
+          "uv": [
+            0.0,
+            0.5,
+            0.5,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.01754,
+            0.14673,
+            0.98405,
+            0.8437
+          ]
+        },
+        {
+          "index": 3,
+          "uv": [
+            0.5,
+            0.5,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.0319,
+            0.14354,
+            0.98086,
+            0.8437
+          ]
+        }
+      ],
+      "sha256": "8a9276cb559584b881dd2aad631a63434720f4fcb1d01d7133dea3cff0db8af1"
+    },
+    {
+      "id": "platformer_player_jump",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_player_jump.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "columns": 2,
+      "rows": 2,
+      "logicalDisplaySize": [
+        64,
+        64
+      ],
+      "suggestedFps": 8,
+      "loop": false,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            0.5,
+            0.5
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.07177,
+            0.22807,
+            1.0,
+            0.92344
+          ]
+        },
+        {
+          "index": 1,
+          "uv": [
+            0.5,
+            0.0,
+            1.0,
+            0.5
+          ],
+          "pixelRectRounded": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.0,
+            0.22807,
+            0.91866,
+            0.94099
+          ]
+        },
+        {
+          "index": 2,
+          "uv": [
+            0.0,
+            0.5,
+            0.5,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.07177,
+            0.07018,
+            0.98405,
+            0.72408
+          ]
+        },
+        {
+          "index": 3,
+          "uv": [
+            0.5,
+            0.5,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.02233,
+            0.07018,
+            0.92663,
+            0.80861
+          ]
+        }
+      ],
+      "sha256": "e746588ae3911b04fe4dcf467ea3917742b210bd65b0ef49ed500ec2775e1dfb"
+    },
+    {
+      "id": "platformer_player_hurt",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_player_hurt.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "columns": 2,
+      "rows": 2,
+      "logicalDisplaySize": [
+        64,
+        64
+      ],
+      "suggestedFps": 10,
+      "loop": false,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            0.5,
+            0.5
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.03349,
+            0.20574,
+            0.98405,
+            0.95853
+          ]
+        },
+        {
+          "index": 1,
+          "uv": [
+            0.5,
+            0.0,
+            1.0,
+            0.5
+          ],
+          "pixelRectRounded": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.01754,
+            0.20574,
+            0.95375,
+            0.96332
+          ]
+        },
+        {
+          "index": 2,
+          "uv": [
+            0.0,
+            0.5,
+            0.5,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.01595,
+            0.14354,
+            0.99522,
+            0.87241
+          ]
+        },
+        {
+          "index": 3,
+          "uv": [
+            0.5,
+            0.5,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.00478,
+            0.11324,
+            0.97767,
+            0.87241
+          ]
+        }
+      ],
+      "sha256": "1fcd67a4dd37fa059a61159e6aa1629e44c20d5b0030b76a95feb8420a43b02c"
+    },
+    {
+      "id": "platformer_player_death",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_player_death.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "columns": 2,
+      "rows": 2,
+      "logicalDisplaySize": [
+        64,
+        64
+      ],
+      "suggestedFps": 6,
+      "loop": false,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            0.5,
+            0.5
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.04466,
+            0.26156,
+            0.98246,
+            0.98724
+          ]
+        },
+        {
+          "index": 1,
+          "uv": [
+            0.5,
+            0.0,
+            1.0,
+            0.5
+          ],
+          "pixelRectRounded": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.02711,
+            0.4067,
+            0.96491,
+            0.99841
+          ]
+        },
+        {
+          "index": 2,
+          "uv": [
+            0.0,
+            0.5,
+            0.5,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.04466,
+            0.35407,
+            0.96332,
+            0.85805
+          ]
+        },
+        {
+          "index": 3,
+          "uv": [
+            0.5,
+            0.5,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.05423,
+            0.34769,
+            0.96332,
+            0.87241
+          ]
+        }
+      ],
+      "sha256": "35c2c20fdcb923b9aed5a17d920409668da9a024476bfa59749b869df1648e53"
+    },
+    {
+      "id": "platformer_enemy_cat_walk",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_enemy_cat_walk.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "columns": 2,
+      "rows": 2,
+      "logicalDisplaySize": [
+        64,
+        64
+      ],
+      "suggestedFps": 8,
+      "loop": true,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            0.5,
+            0.5
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.11962,
+            0.25518,
+            0.96332,
+            0.91228
+          ]
+        },
+        {
+          "index": 1,
+          "uv": [
+            0.5,
+            0.0,
+            1.0,
+            0.5
+          ],
+          "pixelRectRounded": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.0941,
+            0.25518,
+            0.92982,
+            0.92026
+          ]
+        },
+        {
+          "index": 2,
+          "uv": [
+            0.0,
+            0.5,
+            0.5,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.08453,
+            0.18022,
+            0.96332,
+            0.84689
+          ]
+        },
+        {
+          "index": 3,
+          "uv": [
+            0.5,
+            0.5,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.0638,
+            0.18022,
+            0.92982,
+            0.84689
+          ]
+        }
+      ],
+      "sha256": "38126f93c66d9b773f352206fe26636c9722e2a2ad0934e797950b679148823b"
+    },
+    {
+      "id": "platformer_enemy_snake_slither",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_enemy_snake_slither.png",
+      "width": 1774,
+      "height": 887,
+      "mode": "RGBA",
+      "columns": 2,
+      "rows": 2,
+      "logicalDisplaySize": [
+        128,
+        64
+      ],
+      "suggestedFps": 7,
+      "loop": true,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            0.5,
+            0.5
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            887,
+            444
+          ],
+          "visibleBoundsInCell": [
+            0.10823,
+            0.28604,
+            0.93123,
+            0.79955
+          ]
+        },
+        {
+          "index": 1,
+          "uv": [
+            0.5,
+            0.0,
+            1.0,
+            0.5
+          ],
+          "pixelRectRounded": [
+            887,
+            0,
+            887,
+            444
+          ],
+          "visibleBoundsInCell": [
+            0.07328,
+            0.28604,
+            0.93236,
+            0.79955
+          ]
+        },
+        {
+          "index": 2,
+          "uv": [
+            0.0,
+            0.5,
+            0.5,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            444,
+            887,
+            443
+          ],
+          "visibleBoundsInCell": [
+            0.10823,
+            0.28442,
+            0.93123,
+            0.79684
+          ]
+        },
+        {
+          "index": 3,
+          "uv": [
+            0.5,
+            0.5,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            887,
+            444,
+            887,
+            443
+          ],
+          "visibleBoundsInCell": [
+            0.0823,
+            0.28442,
+            0.93236,
+            0.80361
+          ]
+        }
+      ],
+      "sha256": "681a181bbd50dcc55cece34ec2d76c6c1991322a9f517a27620d02d5cfcb776c"
+    },
+    {
+      "id": "platformer_items",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_items.png",
+      "width": 1774,
+      "height": 887,
+      "mode": "RGBA",
+      "columns": 2,
+      "rows": 1,
+      "logicalDisplaySize": [
+        32,
+        32
+      ],
+      "suggestedFps": 0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            0.5,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            887,
+            887
+          ],
+          "visibleBoundsInCell": [
+            0.25592,
+            0.1522,
+            0.86246,
+            0.86584
+          ]
+        },
+        {
+          "index": 1,
+          "uv": [
+            0.5,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            887,
+            0,
+            887,
+            887
+          ],
+          "visibleBoundsInCell": [
+            0.20857,
+            0.20068,
+            0.78918,
+            0.88952
+          ]
+        }
+      ],
+      "sha256": "393c3d2e4bd799d752feac23ba7b3aabe5295462d886816111f8f98aac9ad60d"
+    },
+    {
+      "id": "platformer_platforms",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_platforms.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "columns": 1,
+      "rows": 2,
+      "logicalDisplaySize": [
+        128,
+        64
+      ],
+      "suggestedFps": 0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            1.0,
+            0.5
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            1254,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.0622,
+            0.52313,
+            0.9378,
+            0.85646
+          ]
+        },
+        {
+          "index": 1,
+          "uv": [
+            0.0,
+            0.5,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            627,
+            1254,
+            627
+          ],
+          "visibleBoundsInCell": [
+            0.0622,
+            0.25997,
+            0.9378,
+            0.53748
+          ]
+        }
+      ],
+      "sha256": "1bf0165ac64f9f8791df27e577e27a79c9540b01e9c832172b4989fb35946fb7"
+    },
+    {
+      "id": "platformer_background_grass",
+      "file": "../../app/src/main/res/drawable-nodpi/platformer_background_grass.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "columns": 1,
+      "rows": 1,
+      "logicalDisplaySize": [
+        320,
+        180
+      ],
+      "suggestedFps": 0,
+      "loop": false,
+      "frames": [
+        {
+          "index": 0,
+          "uv": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ],
+          "pixelRectRounded": [
+            0,
+            0,
+            1672,
+            941
+          ]
+        }
+      ],
+      "sha256": "03dbb6306bc20f9818baa0bc8fd68c40410cb0dfe8ff77201152519ad1ebe182"
+    }
+  ]
+}
