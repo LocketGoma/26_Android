@@ -7,21 +7,18 @@ import kr.ac.lecture.mobilegame.foundation.component.SpriteComponent
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
 import kr.ac.lecture.mobilegame.foundation.graphics.Color
 
-/**
- * GameObject의 위치와 크기, Renderer2D의 좌표 전달에 사용하는 mutable data class입니다.
- * 단독 동작이 없는 한 줄 선언이므로 가장 직접적인 사용처인 GameObject와 함께 둡니다.
- */
+/** 위치·크기·속도처럼 X/Y 값 두 개가 필요한 곳에 사용합니다. 각 값은 변경할 수 있습니다. */
 data class Vec2(var x: Float = 0f, var y: Float = 0f)
 
-/** Position은 기존 NDC 월드 좌표, Rotation은 degree, Scale은 배율입니다. */
+/** 물체의 위치, 회전 각도(degree), 크기 배율입니다. position은 GameObject와 같은 값을 공유합니다. */
 class Transform(val position: Vec2, var rotation: Float = 0f, val scale: Vec2 = Vec2(1f, 1f))
 
-/** Player, Enemy, Bullet의 공통 Update/Draw 구조를 정의하는 Abstract Class입니다. */
+/** 게임 물체의 공통 부분입니다. 필요한 그림·이동·충돌 기능만 붙여 사용합니다. */
 abstract class GameObject(
     val position: Vec2,
     val size: Vec2,
 ) {
-    // 기존 position/size 접근을 유지합니다. Component는 모두 같은 Transform을 참조합니다.
+    // 각 기능이 서로 다른 위치를 사용하지 않도록 같은 Transform을 전달합니다.
     val transform = Transform(position)
     var sprite: SpriteComponent? = null
     var movement: MovementComponent? = null

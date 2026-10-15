@@ -4,9 +4,8 @@ import android.view.MotionEvent
 import kr.ac.lecture.mobilegame.foundation.graphics.FitViewport
 
 /**
- * 터치와 센서 Callback에서 수집한 입력 상태를 담는 immutable data class입니다.
- * 현재 SensorInput은 Main Thread에서 등록하므로 별도 Sensor Thread를 만들지 않습니다.
- * InputController가 생성하고 Game Loop가 읽는 데이터이므로 같은 파일에 둡니다.
+ * 한 프레임에서 읽을 터치·센서 입력입니다. 전달한 값은 나중에 수정하지 않습니다.
+ * UI 스레드가 새 값을 만들고 GL 스레드가 snapshot()으로 읽습니다.
  */
 data class InputSnapshot(
     val touching: Boolean = false,
@@ -17,7 +16,7 @@ data class InputSnapshot(
     val gyroscopeZ: Float = 0f,
 )
 
-/** UI Thread의 입력을 immutable InputSnapshot으로 만들어 Render Thread에 전달합니다. */
+/** 터치·센서 콜백의 최신 값을 보관합니다. GL 스레드는 위치를 직접 건드리지 않고 입력만 읽습니다. */
 class InputController {
     @Volatile private var latest = InputSnapshot()
     private var pointerId = -1

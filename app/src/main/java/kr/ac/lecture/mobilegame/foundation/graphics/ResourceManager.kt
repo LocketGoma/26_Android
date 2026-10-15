@@ -6,15 +6,15 @@ import android.opengl.GLES30
 import android.opengl.GLUtils
 
 /**
- * SpriteRegion이 공유하는 그림 정보입니다. GL 컨텍스트 재생성 시 handle만 교체합니다.
- * 외부에서는 읽기만 하고 ResourceManager가 GPU 수명을 관리합니다.
+ * 그림 크기와 GPU에 등록된 번호(handle)입니다. 여러 SpriteRegion이 같은 Texture를 공유합니다.
+ * GL 컨텍스트가 다시 생기면 ResourceManager가 번호만 바꿔 기존 그림 참조를 유지합니다.
  */
 class Texture(handle: Int, val width: Int, val height: Int) {
     var handle: Int = handle
         internal set
 }
 
-/** OpenGL Resource의 생성과 해제를 한곳에서 담당하는 Resource Manager입니다(Unity Resources/Unreal Asset Manager 대응). */
+/** Android 그림 읽기, GPU 업로드, 캐시와 해제를 한곳에서 처리합니다. GL 스레드에서 사용합니다. */
 class ResourceManager(private val context: Context, private val nearestFiltering: Boolean = false) {
     private val textures = mutableMapOf<Int, Texture>()
 

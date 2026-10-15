@@ -6,7 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 
-/** Sensor → Input → Player 이동 연결을 위한 Adapter. 현재 게임은 Touch를 기본 입력으로 씁니다. */
+/** 센서 이벤트를 InputController에 기록합니다. 현재 Player 이동에는 터치를 사용합니다. */
 class SensorInput(context: Context, private val input: InputController) : SensorEventListener {
     private val manager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
     private val accelerometer = manager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)

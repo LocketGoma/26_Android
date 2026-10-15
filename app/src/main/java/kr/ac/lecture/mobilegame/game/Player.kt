@@ -51,4 +51,5 @@ class Player(sprite: SpriteClip? = null) : GameObject(Vec2(0f, -0.72f), Vec2(0.2
         position.x = position.x.coerceIn(-0.9f, 0.9f)
         position.y = position.y.coerceIn(-0.9f, 0.9f)
     }
+
 }

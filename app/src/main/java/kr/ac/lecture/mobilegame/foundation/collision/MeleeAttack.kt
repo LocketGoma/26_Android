@@ -1,12 +1,16 @@
 package kr.ac.lecture.mobilegame.foundation.collision
 
-/** 선택 과제용 근접 판정입니다. 현재 플랫포머에는 연결하지 않으며 머리 밟기로만 진행합니다. */
+/** 선택 실습용 근접 판정입니다. 한 번의 공격에서는 같은 대상에게 한 번만 피해를 줍니다. */
 class MeleeAttack(
     val range: Float = 1.1f,
     val duration: Float = 0.18f,
     val cooldown: Float = 0.40f,
 ) {
-    init { require(range.isFinite() && duration.isFinite() && cooldown.isFinite() && range > 0f && duration > 0f && cooldown >= duration) }
+    init {
+        require(range.isFinite() && range > 0f)
+        require(duration.isFinite() && duration > 0f)
+        require(cooldown.isFinite() && cooldown >= duration)
+    }
     var activeRemaining = 0f
         private set
     var cooldownRemaining = 0f

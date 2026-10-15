@@ -3,7 +3,7 @@ package kr.ac.lecture.mobilegame.foundation.scene
 import kr.ac.lecture.mobilegame.foundation.graphics.Renderer2D
 import kr.ac.lecture.mobilegame.foundation.input.InputSnapshot
 
-/** Unity Scene / Unreal Level에 대응하는, 한 화면의 상태와 규칙입니다. */
+/** 한 게임 화면의 계산과 그리기입니다. 화면에 들어올 때와 나갈 때의 처리도 둘 수 있습니다. */
 interface Scene {
     fun onEnter() = Unit
     fun resize(width: Int, height: Int) = Unit
@@ -12,10 +12,7 @@ interface Scene {
     fun onExit() = Unit
 }
 
-/**
- * 현재 Scene의 수명과 전환을 관리하는 Scene Manager입니다.
- * Scene Interface와 전환 순서를 한곳에서 읽을 수 있도록 같은 파일에 둡니다.
- */
+/** 현재 Scene을 갱신하고 그립니다. 전환할 때 종료 → 진입 → 화면 크기 전달 순서를 지킵니다. */
 class SceneManager(initialScene: Scene) {
     private var current: Scene = initialScene.also { it.onEnter() }
     private var width = 0

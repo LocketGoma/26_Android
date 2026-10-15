@@ -7,10 +7,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
-/**
- * Renderer2D에 전달할 RGBA 값을 담는 immutable data class입니다.
- * Render 명령과 항상 함께 읽는 작은 데이터이므로 Renderer2D와 같은 파일에 둡니다.
- */
+/** 빨강·초록·파랑·불투명도를 0..1 값으로 전달합니다. alpha=0은 투명, 1은 불투명입니다. */
 data class Color(val red: Float, val green: Float, val blue: Float, val alpha: Float = 1f) {
     companion object {
         val CYAN = Color(0.20f, 0.80f, 1.00f)
@@ -20,7 +17,7 @@ data class Color(val red: Float, val green: Float, val blue: Float, val alpha: F
     }
 }
 
-/** 색 사각형과 Texture UV 영역을 그리는 최소 OpenGL ES 3.0 Renderer입니다. */
+/** 사각형이나 그림을 OpenGL ES 3.0으로 출력합니다. 물체 이동과 게임 규칙은 계산하지 않습니다. */
 class Renderer2D {
     private val viewport = Viewport2D()
     fun setViewport(width: Int, height: Int) { viewport.resize(width, height) }
@@ -32,7 +29,7 @@ class Renderer2D {
     private var colorLocation = -1
     private var useTextureLocation = -1
     private var textureLocation = -1
-    // 사각형 6개 정점 × (위치 2 + UV 2). 그릴 때마다 direct buffer를 만들지 않습니다.
+    // 사각형의 정점 6개 × (위치 2 + UV 2). 같은 버퍼를 재사용합니다.
     private val vertices = ByteBuffer.allocateDirect(6 * 4 * Float.SIZE_BYTES)
         .order(ByteOrder.nativeOrder()).asFloatBuffer()
     private val vertexShader = """

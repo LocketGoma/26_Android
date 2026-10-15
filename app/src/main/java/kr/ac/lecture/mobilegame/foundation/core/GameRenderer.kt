@@ -12,7 +12,7 @@ import kr.ac.lecture.mobilegame.foundation.scene.SceneManager
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-/** 두 게임이 공유하는 GL 스레드의 Input → Update → Render 순서입니다. */
+/** GL 스레드에서 입력 읽기 → 게임 계산 → 그리기를 반복합니다. 특정 게임의 규칙은 넣지 않습니다. */
 class GameRenderer(
     context: Context,
     private val contentAspectRatio: Float?,
@@ -49,8 +49,11 @@ class GameRenderer(
 
     override fun onDrawFrame(gl: GL10?) {
         if (!::scenes.isInitialized) return
-        // GameClock 자체는 GL Thread에서만 접근합니다.
-        if (resetClock) { resetClock = false; clock.reset() }
+        // 앱 복귀 직후에는 쉬고 있던 시간을 이동 시간으로 더하지 않습니다.
+        if (resetClock) {
+            resetClock = false
+            clock.reset()
+        }
         val deltaTime = clock.tick()
         if (!paused) scenes.update(deltaTime, readInput())
         renderer.beginFrame()
