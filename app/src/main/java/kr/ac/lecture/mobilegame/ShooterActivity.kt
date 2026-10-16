@@ -41,7 +41,6 @@ class ShooterActivity : Activity() {
         super.onCreate(savedInstanceState)
         DebugRuntime.initialize(applicationContext)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        SampleScreen.hideSystemBars(this)
 
         sound = SoundManager(this)
         gameView = GameSurfaceView(this, CONTENT_ASPECT_RATIO) { resources ->
@@ -54,6 +53,7 @@ class ShooterActivity : Activity() {
             ).also { scene = it }
         }
         setContentView(buildContentView())
+        SampleScreen.hideSystemBars(this)
     }
 
     private fun buildContentView(): View {

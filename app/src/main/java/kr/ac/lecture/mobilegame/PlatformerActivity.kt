@@ -38,13 +38,13 @@ class PlatformerActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        SampleScreen.hideSystemBars(this)
         gameView = SceneSurfaceView(this) { resources ->
             PlatformerScene(world, controls, PlatformerPainter(PlatformerSprites(resources))) { snapshot ->
                 runOnUiThread { if (!isFinishing && !isDestroyed) showStatus(snapshot) }
             }
         }
         setContentView(buildContentView())
+        SampleScreen.hideSystemBars(this)
     }
 
     @Suppress("DEPRECATION")
