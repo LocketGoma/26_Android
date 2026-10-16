@@ -2,14 +2,41 @@ package kr.ac.lecture.mobilegame
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
+import android.widget.Button
+import android.widget.LinearLayout
 
 /** 게임 선택 화면과 두 게임에서 함께 쓰는 Android 화면 설정입니다. */
 object SampleScreen {
+    /** 두 게임의 실습 도구를 같은 크기와 모양으로 만듭니다. 동작은 각 Activity에서 연결합니다. */
+    fun addDebugButton(tools: LinearLayout, symbol: String, description: Int, action: () -> Unit): Button {
+        val context = tools.context
+        return Button(context).apply {
+            text = symbol
+            contentDescription = context.getString(description)
+            textSize = 22f
+            setTextColor(Color.WHITE)
+            setPadding(0, 0, 0, 0)
+            minWidth = 0
+            minHeight = 0
+            stateListAnimator = null
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.argb(100, 20, 35, 25))
+            }
+            setOnClickListener { action() }
+            tools.addView(this, LinearLayout.LayoutParams(context.dp(44), context.dp(44)).apply {
+                setMargins(context.dp(3), context.dp(3), context.dp(3), context.dp(3))
+            })
+        }
+    }
+
     @Suppress("DEPRECATION")
     fun hideSystemBars(activity: Activity) {
         val window = activity.window

@@ -44,8 +44,28 @@ class ShooterScene(
     private var gameOverSaved = false
     private var highScores = leaderboard?.scores().orEmpty()
     private var lastUi: GameUiSnapshot? = null
+    private var showCollision = BuildConfig.DEBUG_BLOCK && DebugConfig.SHOW_COLLIDER
+    private var viewportHeight = 1
+    private var hudTopInset = 0
 
     override fun onEnter() = notifyUi()
+
+    override fun resize(width: Int, height: Int) {
+        viewportHeight = height
+        hud.setTopInset(hudTopInset, viewportHeight)
+    }
+
+    /** Android UI의 안전 여백을 HUD의 OpenGL 좌표에 맞춥니다. 게임 영역은 줄이지 않습니다. */
+    fun setHudTopInset(pixels: Int) {
+        hudTopInset = pixels.coerceAtLeast(0)
+        hud.setTopInset(hudTopInset, viewportHeight)
+    }
+
+    fun toggleCollision() {
+        if (!BuildConfig.DEBUG_BLOCK) return
+        showCollision = !showCollision
+        notifyUi()
+    }
 
     fun startGame() {
         clearWorld()
@@ -257,7 +277,7 @@ class ShooterScene(
         explosions.drawActive(renderer)
         screenFlashes.drawActive(renderer)
         val boss = enemies.firstOrNull { it.active && it.isBoss }
-        if (BuildConfig.DEBUG_BLOCK && DebugConfig.SHOW_COLLIDER) {
+        if (BuildConfig.DEBUG_BLOCK && showCollision) {
             if (session.isPlaying) debugHud.draw(renderer, playerDebugGroup)
             debugHud.draw(renderer, bullets)
             debugHud.draw(renderer, enemies)
@@ -284,6 +304,7 @@ class ShooterScene(
             score = session.score,
             bombs = session.bombs,
             highScores = if (session.state == GameState.LEADERBOARD) highScores else emptyList(),
+            showCollision = showCollision,
         )
         if (snapshot != lastUi) {
             lastUi = snapshot

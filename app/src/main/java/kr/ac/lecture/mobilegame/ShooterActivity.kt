@@ -14,7 +14,6 @@ import android.widget.TextView
 import kr.ac.lecture.mobilegame.foundation.core.GameSurfaceView
 import kr.ac.lecture.mobilegame.foundation.audio.SoundManager
 import kr.ac.lecture.mobilegame.foundation.debug.DebugRuntime
-import kr.ac.lecture.mobilegame.foundation.graphics.FitViewport
 import kr.ac.lecture.mobilegame.game.GameState
 import kr.ac.lecture.mobilegame.game.GameUiSnapshot
 import kr.ac.lecture.mobilegame.game.GameUiListener
@@ -36,6 +35,8 @@ class ShooterActivity : Activity() {
     private lateinit var secondaryButton: Button
     private lateinit var tertiaryButton: Button
     private lateinit var bombTouchArea: Button
+    private var collisionButton: Button? = null
+    private var safeTop = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +44,7 @@ class ShooterActivity : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         sound = SoundManager(this)
-        gameView = GameSurfaceView(this, CONTENT_ASPECT_RATIO) { resources ->
+        gameView = GameSurfaceView(this) { resources ->
             ShooterScene(
                 ShootingSpriteCatalog.load(resources), ItemSpriteCatalog.load(resources),
                 UiSpriteCatalog.load(resources), LeaderboardStore(applicationContext),
@@ -56,6 +57,7 @@ class ShooterActivity : Activity() {
         SampleScreen.hideSystemBars(this)
     }
 
+    @Suppress("DEPRECATION")
     private fun buildContentView(): View {
         val root = FrameLayout(this)
         root.addView(gameView, FrameLayout.LayoutParams(
@@ -90,6 +92,7 @@ class ShooterActivity : Activity() {
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT,
         ))
+        SampleScreen.applyInsets(menuScroll)
 
         // 실제 아이콘과 수량은 기존 ui_sprites.png로 그립니다. 이 투명 View는 터치와 접근성만 담당합니다.
         bombTouchArea = Button(this).apply {
@@ -101,20 +104,43 @@ class ShooterActivity : Activity() {
         }
         root.addView(bombTouchArea, FrameLayout.LayoutParams(dp(136), dp(88), Gravity.TOP or Gravity.END))
         gameView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            if (gameView.width > 0 && gameView.height > 0) {
-                val area = FitViewport.fit(gameView.width, gameView.height, CONTENT_ASPECT_RATIO)
-                bombTouchArea.layoutParams = FrameLayout.LayoutParams(
-                    (area.width * 0.3f).toInt().coerceAtLeast(1),
-                    (area.height * 0.14f).toInt().coerceAtLeast(1),
-                    Gravity.TOP or Gravity.START,
-                ).apply {
-                    leftMargin = area.left + (area.width * 0.7f).toInt()
-                    topMargin = area.top
-                }
-            }
+            updateHudLayout()
         }
-        SampleScreen.applyInsets(root)
+        if (BuildConfig.DEBUG_BLOCK) addDebugTools(root)
+        // 게임은 화면 전체를 채우고, 메뉴·도구·HUD에만 안전 여백을 적용합니다.
+        root.setOnApplyWindowInsetsListener { _, insets ->
+            safeTop = insets.systemWindowInsetTop
+            updateHudLayout()
+            insets
+        }
         return root
+    }
+
+    private fun addDebugTools(root: FrameLayout) {
+        val overlay = FrameLayout(this)
+        val tools = LinearLayout(this)
+        SampleScreen.addDebugButton(tools, "↻", R.string.restart_game) {
+            gameView.clearInput()
+            command { startGame() }
+        }
+        collisionButton = SampleScreen.addDebugButton(tools, "□", R.string.show_collision) {
+            command { toggleCollision() }
+        }
+        overlay.addView(tools, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END))
+        SampleScreen.applyInsets(overlay)
+        root.addView(overlay, FrameLayout.LayoutParams(-1, -1))
+    }
+
+    private fun updateHudLayout() {
+        if (gameView.width <= 0 || gameView.height <= 0) return
+        val top = safeTop + if (BuildConfig.DEBUG_BLOCK) dp(50) else 0
+        // 폭탄 터치 영역도 그림과 같은 픽셀만큼 내려 디버그 버튼과 겹치지 않게 합니다.
+        bombTouchArea.layoutParams = FrameLayout.LayoutParams(
+            (gameView.width * 0.3f).toInt().coerceAtLeast(1),
+            (gameView.height * 0.14f).toInt().coerceAtLeast(1),
+            Gravity.TOP or Gravity.END,
+        ).apply { topMargin = top }
+        command { setHudTopInset(top) }
     }
 
     private fun menuButton() = Button(this).apply {
@@ -128,6 +154,11 @@ class ShooterActivity : Activity() {
     ).apply { setMargins(0, dp(6), 0, dp(6)) }
 
     private fun showGameUi(snapshot: GameUiSnapshot) {
+        collisionButton?.apply {
+            setTextColor(if (snapshot.showCollision) Color.rgb(180, 255, 155) else Color.WHITE)
+            contentDescription = getString(if (snapshot.showCollision) R.string.hide_collision else R.string.show_collision)
+        }
+        updateHudLayout()
         bombTouchArea.contentDescription = getString(R.string.bomb_count_description, snapshot.bombs)
         when (snapshot.state) {
             GameState.START -> showStartMenu()
@@ -203,5 +234,4 @@ class ShooterActivity : Activity() {
         super.onDestroy()
     }
 
-    companion object { private const val CONTENT_ASPECT_RATIO = 9f / 16f }
 }

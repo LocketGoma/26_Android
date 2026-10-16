@@ -3,7 +3,6 @@ package kr.ac.lecture.mobilegame
 import android.app.Activity
 import android.content.res.Configuration
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.WindowManager
@@ -90,29 +89,14 @@ class PlatformerActivity : Activity() {
     /** 기존 DEBUG_BLOCK이 켜진 빌드에만 실습용 버튼을 만듭니다. */
     private fun addDebugTools(overlay: FrameLayout) {
         val tools = LinearLayout(this)
-        fun icon(symbol: String, description: Int, action: () -> Unit): Button = Button(this).apply {
-            text = symbol
-            contentDescription = getString(description)
-            textSize = 22f
-            setTextColor(Color.WHITE)
-            setPadding(0, 0, 0, 0)
-            minWidth = 0; minHeight = 0
-            stateListAnimator = null
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.argb(100, 20, 35, 25))
-            }
-            setOnClickListener { action() }
-            tools.addView(this, LinearLayout.LayoutParams(dp(44), dp(44)).apply { setMargins(dp(3), dp(3), dp(3), dp(3)) })
-        }
-        icon("↻", R.string.restart_game) {
+        SampleScreen.addDebugButton(tools, "↻", R.string.restart_game) {
             touchControls.clearInputs()
             gameView.runOnGameThread { world.restart() }
         }
-        followButton = icon("⇆", R.string.follow_platform_on) {
+        followButton = SampleScreen.addDebugButton(tools, "⇆", R.string.follow_platform_on) {
             gameView.runOnGameThread { world.followPlatform = !world.followPlatform }
         }
-        collisionButton = icon("□", R.string.show_collision) {
+        collisionButton = SampleScreen.addDebugButton(tools, "□", R.string.show_collision) {
             gameView.runOnGameThread { world.showCollision = !world.showCollision }
         }
         overlay.addView(tools, FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END))
