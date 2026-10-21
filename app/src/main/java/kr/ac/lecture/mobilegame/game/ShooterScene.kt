@@ -26,10 +26,10 @@ class ShooterScene(
     private val leaderboard: LeaderboardStore? = null,
     private val uiListener: GameUiListener? = null,
     private val sound: SoundManager? = null,
+    private val player: Player = Player(sprites?.newPlayerIdleClip()),
 ) : Scene {
     // 별도 음원 Asset이 없어도 ToneEffect로 피드백하며, 추후 SoundPool Asset으로 교체할 수 있습니다.
     private val session = GameSession()
-    private val player = Player(sprites?.newPlayerIdleClip())
     private val bullets = mutableListOf<Bullet>()
     private val enemies = mutableListOf<Enemy>()
     private val items = mutableListOf<ItemPickup>()
@@ -89,7 +89,7 @@ class ShooterScene(
         if (!session.useBomb()) return
 
         sound?.playTone(ToneEffect.BOMB)
-        screenFlashes += ScreenFlash(Color(1f, 0.72f, 0.15f, 0.46f), 0.34f)
+        screenFlashes += ScreenFlash(Color(1f, 0.72f, 0.15f, 0.46f), 0.34f).apply { active = true }
         spawnEffect(sprites?.explosion, player, 1.25f)
         clearEnemyBullets()
         // 피해 처리 중 아이템/효과는 추가해도 적 목록 자체는 바꾸지 않습니다.
@@ -125,8 +125,7 @@ class ShooterScene(
         shotTimer += deltaTime
         while (shotTimer >= GameConfig.FIRE_INTERVAL_SECONDS) {
             shotTimer -= GameConfig.FIRE_INTERVAL_SECONDS
-            bullets += Bullet(player.position.x, player.position.y + player.size.y,
-                sprites?.playerBullet, BulletOwner.PLAYER)
+            bullets += Bullet(player.position.x, player.position.y + player.size.y, sprites?.playerBullet, BulletOwner.PLAYER).apply { active = true }
         }
 
         spawnTimer += deltaTime
@@ -146,8 +145,7 @@ class ShooterScene(
         if (enemyShotTimer >= enemyFireInterval) {
             enemyShotTimer -= enemyFireInterval
             enemies.filter { it.active }.randomOrNull()?.let { enemy ->
-                bullets += Bullet(enemy.position.x, enemy.position.y - enemy.size.y / 2f,
-                    sprites?.enemyBullet, BulletOwner.ENEMY)
+                bullets += Bullet(enemy.position.x, enemy.position.y - enemy.size.y / 2f, sprites?.enemyBullet, BulletOwner.ENEMY).apply { active = true }
             }
         }
     }
@@ -159,25 +157,12 @@ class ShooterScene(
             EnemyKind.NORMAL
         }
         val clip = if (kind == EnemyKind.ELITE) sprites?.newBomberEnemyClip() else sprites?.newSmallEnemyClip()
-        enemies += Enemy(
-            x = Random.nextFloat() * 1.7f - 0.85f,
-            speed = (if (kind == EnemyKind.ELITE) 0.30f else 0.46f) +
-                (session.cycle - 1) * 0.025f,
-            sprite = clip,
-            kind = kind,
-            maxHp = if (kind == EnemyKind.ELITE) GameConfig.ELITE_ENEMY_HP else GameConfig.NORMAL_ENEMY_HP,
-        )
+        enemies += Enemy(x = Random.nextFloat() * 1.7f - 0.85f, speed = (if (kind == EnemyKind.ELITE) 0.30f else 0.46f) + (session.cycle - 1) * 0.025f, sprite = clip, kind = kind, maxHp = if (kind == EnemyKind.ELITE) GameConfig.ELITE_ENEMY_HP else GameConfig.NORMAL_ENEMY_HP).apply { active = true }
     }
 
     private fun spawnBoss() {
         enemies.forEach { if (it.isBoss) it.active = false }
-        enemies += Enemy(
-            x = 0f,
-            speed = 0f,
-            sprite = sprites?.newBomberEnemyClip(),
-            kind = EnemyKind.BOSS,
-            maxHp = GameConfig.bossMaxHp(session.cycle),
-        )
+        enemies += Enemy(x = 0f, speed = 0f, sprite = sprites?.newBomberEnemyClip(), kind = EnemyKind.BOSS, maxHp = GameConfig.bossMaxHp(session.cycle)).apply { active = true }
         spawnTimer = 0f
         enemyShotTimer = 0f
     }
@@ -228,7 +213,7 @@ class ShooterScene(
     private fun handlePlayerHit() {
         if (!session.takeHit()) return
         sound?.playTone(ToneEffect.HIT)
-        screenFlashes += ScreenFlash(Color(1f, 0.08f, 0.04f, 0.52f), 0.28f)
+        screenFlashes += ScreenFlash(Color(1f, 0.08f, 0.04f, 0.52f), 0.28f).apply { active = true }
         spawnEffect(sprites?.impact, player, 0.68f)
         if (session.state == GameState.GAME_OVER) {
             spawnEffect(sprites?.playerDestroyedFrames, player, 0.78f)
@@ -248,7 +233,7 @@ class ShooterScene(
         if (Random.nextFloat() < GameConfig.ITEM_DROP_CHANCE) {
             val type = if (Random.nextBoolean()) ItemType.LIFE else ItemType.BOMB
             val region = if (type == ItemType.LIFE) itemSprites?.healthPickup else itemSprites?.bombPickup
-            items += ItemPickup(enemy.position.x, enemy.position.y, type, region)
+            items += ItemPickup(enemy.position.x, enemy.position.y, type, region).apply { active = true }
         }
 
         if (enemy.isBoss) {
@@ -299,13 +284,7 @@ class ShooterScene(
     }
 
     private fun notifyUi() {
-        val snapshot = GameUiSnapshot(
-            state = session.state,
-            score = session.score,
-            bombs = session.bombs,
-            highScores = if (session.state == GameState.LEADERBOARD) highScores else emptyList(),
-            showCollision = showCollision,
-        )
+        val snapshot = GameUiSnapshot(state = session.state, score = session.score, bombs = session.bombs, highScores = if (session.state == GameState.LEADERBOARD) highScores else emptyList(), showCollision = showCollision)
         if (snapshot != lastUi) {
             lastUi = snapshot
             uiListener?.onChanged(snapshot)
@@ -317,7 +296,9 @@ class ShooterScene(
     }
 
     private fun spawnEffect(frames: List<SpriteRegion>?, target: GameObject, size: Float = 0.34f) {
-        if (!frames.isNullOrEmpty()) explosions += Explosion(target.position.x, target.position.y, frames, size)
+        if (!frames.isNullOrEmpty()) {
+            explosions += Explosion(target.position.x, target.position.y, frames, size).apply { active = true }
+        }
     }
 
     private fun removeInactiveObjects() {

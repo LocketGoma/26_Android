@@ -11,9 +11,7 @@ data class Aabb(val left: Float, val minY: Float, val right: Float, val maxY: Fl
         require(minY <= maxY) { "minY must be <= maxY" }
     }
 
-    fun overlaps(other: Aabb): Boolean =
-        right > other.left && left < other.right &&
-            maxY > other.minY && minY < other.maxY
+    fun overlaps(other: Aabb): Boolean = right > other.left && left < other.right && maxY > other.minY && minY < other.maxY
 
     companion object {
         fun fromCenter(x: Float, y: Float, width: Float, height: Float): Aabb {

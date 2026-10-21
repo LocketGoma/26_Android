@@ -32,8 +32,7 @@ class MainActivity : Activity() {
                 textSize = 20f
                 isAllCaps = false
                 setOnClickListener { startActivity(Intent(this@MainActivity, activity)) }
-            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, dp(12), 0, dp(12)) })
+            }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, dp(12), 0, dp(12)) })
         }
         addEntry(R.string.shooter_sample, ShooterActivity::class.java)
         addEntry(R.string.platformer_sample, PlatformerActivity::class.java)

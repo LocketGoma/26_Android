@@ -6,7 +6,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GameSessionTest {
-    @Test fun newGameStartsWithRequestedLifeAndBombs() {
+    @Test
+    fun newGameStartsWithRequestedLifeAndBombs() {
         val session = GameSession()
         session.startGame()
 
@@ -17,7 +18,8 @@ class GameSessionTest {
         assertEquals(99, session.timerSeconds)
     }
 
-    @Test fun normalPhaseShowsZeroThenChangesToBossAtOneHundredSeconds() {
+    @Test
+    fun normalPhaseShowsZeroThenChangesToBossAtOneHundredSeconds() {
         val session = GameSession().apply { startGame() }
 
         assertFalse(session.update(99.1f))
@@ -26,7 +28,8 @@ class GameSessionTest {
         assertEquals(GameState.BOSS, session.state)
     }
 
-    @Test fun bossDeathStartsNextCycle() {
+    @Test
+    fun bossDeathStartsNextCycle() {
         val session = GameSession().apply {
             startGame()
             update(GameConfig.NORMAL_PHASE_SECONDS)
@@ -39,7 +42,8 @@ class GameSessionTest {
         assertEquals(99, session.timerSeconds)
     }
 
-    @Test fun hitResetsBombsAndFiveSecondInvincibilityBlocksDamage() {
+    @Test
+    fun hitResetsBombsAndFiveSecondInvincibilityBlocksDamage() {
         val session = GameSession().apply {
             startGame()
             repeat(3) { collectBomb() }
@@ -57,7 +61,8 @@ class GameSessionTest {
         assertEquals(1, session.life)
     }
 
-    @Test fun lifeAndBombPickupsRespectMaximums() {
+    @Test
+    fun lifeAndBombPickupsRespectMaximums() {
         val session = GameSession()
         session.startGame()
         repeat(10) {
@@ -69,7 +74,8 @@ class GameSessionTest {
         assertEquals(5, session.bombs)
     }
 
-    @Test fun bombUseStopsAtZero() {
+    @Test
+    fun bombUseStopsAtZero() {
         val session = GameSession().apply { startGame() }
 
         assertTrue(session.useBomb())
@@ -78,7 +84,8 @@ class GameSessionTest {
         assertEquals(0, session.bombs)
     }
 
-    @Test fun thirdAcceptedHitEndsGame() {
+    @Test
+    fun thirdAcceptedHitEndsGame() {
         val session = GameSession().apply { startGame() }
         repeat(3) {
             assertTrue(session.takeHit())

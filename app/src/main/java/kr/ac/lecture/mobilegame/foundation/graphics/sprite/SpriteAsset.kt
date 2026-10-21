@@ -15,6 +15,7 @@ class SpriteAsset(
     val looping: Boolean = true,
 ) {
     val frames = frames.toList()
+
     init {
         require(name.isNotBlank())
         require(frames.size in 1..8) { "One animation asset must contain 1..8 frames" }
@@ -37,10 +38,6 @@ class SpriteLoader(private val resources: ResourceManager) {
         require(width == null || scale == 1f) { "Choose Pixel Size OR load scale" }
         require(width == null || (width.isFinite() && width > 0f && height!!.isFinite() && height > 0f))
         val texture = resources.texture(resourceId)
-        return SpriteAsset(
-            name ?: resources.resourceName(resourceId),
-            listOf(SpriteRegion(texture, 0f, 0f, 1f, 1f)),
-            width ?: texture.width * scale, height ?: texture.height * scale,
-        )
+        return SpriteAsset(name ?: resources.resourceName(resourceId), listOf(SpriteRegion(texture, 0f, 0f, 1f, 1f)), width ?: texture.width * scale, height ?: texture.height * scale)
     }
 }

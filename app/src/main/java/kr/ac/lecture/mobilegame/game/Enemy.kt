@@ -17,14 +17,11 @@ class Enemy(
     sprite: SpriteClip? = null,
     val kind: EnemyKind = EnemyKind.NORMAL,
     val maxHp: Int = 1,
-) : GameObject(
-    Vec2(x, if (kind == EnemyKind.BOSS) 0.70f else 1.05f),
-    when (kind) {
-        EnemyKind.NORMAL -> Vec2(0.24f, 0.18f)
-        EnemyKind.ELITE -> Vec2(0.36f, 0.27f)
-        EnemyKind.BOSS -> Vec2(0.62f, 0.46f)
-    },
-) {
+) : GameObject(Vec2(x, if (kind == EnemyKind.BOSS) 0.70f else 1.05f), when (kind) {
+    EnemyKind.NORMAL -> Vec2(0.24f, 0.18f)
+    EnemyKind.ELITE -> Vec2(0.36f, 0.27f)
+    EnemyKind.BOSS -> Vec2(0.62f, 0.46f)
+}) {
     var hp: Int = maxHp
         private set
     val isBoss: Boolean get() = kind == EnemyKind.BOSS

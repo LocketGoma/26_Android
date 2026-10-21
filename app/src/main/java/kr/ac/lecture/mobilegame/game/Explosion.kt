@@ -17,8 +17,7 @@ class Explosion(
     init {
         require(frames.isNotEmpty()) { "Explosion needs animation frames" }
         sprite = SpriteComponent(this, useObjectSize = true).apply {
-            addSprite(SpriteAsset("Explosion", frames, frames.first().widthPixels, frames.first().heightPixels,
-                secondsPerFrame = 0.08f, looping = false))
+            addSprite(SpriteAsset("Explosion", frames, frames.first().widthPixels, frames.first().heightPixels, secondsPerFrame = 0.08f, looping = false))
         }
         // 폭발은 시각 효과이므로 CollisionComponent를 붙이지 않습니다.
     }

@@ -27,8 +27,7 @@ class GameSession {
     val isPlaying: Boolean get() = state == GameState.NORMAL || state == GameState.BOSS
     val isInvincible: Boolean get() = invincibleRemaining > 0f
     val timerSeconds: Int
-        get() = (GameConfig.NORMAL_PHASE_SECONDS - normalElapsed).coerceAtLeast(0f)
-            .toInt().coerceAtMost(99)
+        get() = (GameConfig.NORMAL_PHASE_SECONDS - normalElapsed).coerceAtLeast(0f).toInt().coerceAtMost(99)
 
     fun startGame() {
         cycle = 1

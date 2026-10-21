@@ -32,5 +32,7 @@ class SpriteAnimation(
         }
     }
 
-    fun reset() { currentFrame = 0; elapsed = 0f; isFinished = false }
+    fun reset() {
+        currentFrame = 0; elapsed = 0f; isFinished = false
+    }
 }

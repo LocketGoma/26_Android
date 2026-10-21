@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
@@ -13,6 +14,7 @@ import android.widget.TextView
 import kr.ac.lecture.mobilegame.foundation.core.SceneSurfaceView
 import kr.ac.lecture.mobilegame.foundation.core.DebugConfig
 import kr.ac.lecture.mobilegame.foundation.input.DigitalInput
+import kr.ac.lecture.mobilegame.game.addon.PlatformerWasdControls
 import kr.ac.lecture.mobilegame.game.platformer.PlatformerControlsView
 import kr.ac.lecture.mobilegame.game.platformer.PlatformerPainter
 import kr.ac.lecture.mobilegame.game.platformer.PlatformerScene
@@ -24,6 +26,7 @@ import kr.ac.lecture.mobilegame.game.platformer.PlatformerWorld
 /** 가로 전체 게임 화면 위에 HUD와 조작부를 겹쳐 그립니다. */
 class PlatformerActivity : Activity() {
     private val controls = DigitalInput()
+    private val keyboardControls = PlatformerWasdControls(controls)
     private val world = PlatformerWorld().apply {
         showCollision = BuildConfig.DEBUG_BLOCK && DebugConfig.SHOW_COLLIDER
     }
@@ -33,6 +36,7 @@ class PlatformerActivity : Activity() {
     private lateinit var finishLabel: TextView
     private var followButton: Button? = null
     private var collisionButton: Button? = null
+    private var gameplayEnabled = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -103,6 +107,7 @@ class PlatformerActivity : Activity() {
     }
 
     private fun showStatus(snapshot: PlatformerUiSnapshot) {
+        gameplayEnabled = snapshot.state == PlatformerState.PLAYING
         hud.text = "♥ ${snapshot.life}   ★ ${snapshot.score}   ◆ ${snapshot.collected}"
         followButton?.apply {
             setTextColor(if (snapshot.followPlatform) Color.rgb(180, 255, 155) else Color.WHITE)
@@ -113,7 +118,11 @@ class PlatformerActivity : Activity() {
             contentDescription = getString(if (snapshot.showCollision) R.string.hide_collision else R.string.show_collision)
         }
         finishLabel.visibility = if (snapshot.state == PlatformerState.CLEARED) android.view.View.VISIBLE else android.view.View.GONE
-        touchControls.setGameplayEnabled(snapshot.state == PlatformerState.PLAYING)
+        touchControls.setGameplayEnabled(gameplayEnabled)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        return keyboardControls.onKey(event, gameplayEnabled) || super.dispatchKeyEvent(event)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -126,6 +135,11 @@ class PlatformerActivity : Activity() {
         if (hasFocus) SampleScreen.hideSystemBars(this) else if (::touchControls.isInitialized) touchControls.clearInputs()
     }
 
-    override fun onResume() { super.onResume(); gameView.onHostResume() }
-    override fun onPause() { touchControls.clearInputs(); gameView.onHostPause(); super.onPause() }
+    override fun onResume() {
+        super.onResume(); gameView.onHostResume()
+    }
+
+    override fun onPause() {
+        touchControls.clearInputs(); gameView.onHostPause(); super.onPause()
+    }
 }

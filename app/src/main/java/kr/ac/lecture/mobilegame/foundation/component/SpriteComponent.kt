@@ -45,7 +45,9 @@ class SpriteComponent(private val owner: GameObject, private val useObjectSize: 
         scale = value
     }
 
-    fun update(deltaTime: Float) { animation?.update(deltaTime) }
+    fun update(deltaTime: Float) {
+        animation?.update(deltaTime)
+    }
 
     fun draw(renderer: Renderer2D) {
         val asset = current ?: return

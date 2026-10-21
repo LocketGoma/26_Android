@@ -22,9 +22,7 @@ data class SpriteRegion(
         require(left >= 0f && top >= 0f && right <= 1f && bottom <= 1f && left < right && top < bottom)
         val width = uRight - uLeft
         val height = vBottom - vTop
-        return copy(uLeft = uLeft + left * width, uRight = uLeft + right * width,
-            vTop = vTop + top * height, vBottom = vTop + bottom * height,
-            widthPixels = widthPixels * (right - left), heightPixels = heightPixels * (bottom - top))
+        return copy(uLeft = uLeft + left * width, uRight = uLeft + right * width, vTop = vTop + top * height, vBottom = vTop + bottom * height, widthPixels = widthPixels * (right - left), heightPixels = heightPixels * (bottom - top))
     }
 }
 
@@ -53,15 +51,7 @@ class SpriteSheet(
         val cellV = 1f / rows
         val insetU = if (insetHalfTexel) 0.5f / texture.width else 0f
         val insetV = if (insetHalfTexel) 0.5f / texture.height else 0f
-        return SpriteRegion(
-            texture = texture,
-            uLeft = column * cellU + insetU,
-            vTop = row * cellV + insetV,
-            uRight = (column + 1) * cellU - insetU,
-            vBottom = (row + 1) * cellV - insetV,
-            widthPixels = texture.width.toFloat() / columns,
-            heightPixels = texture.height.toFloat() / rows,
-        )
+        return SpriteRegion(texture = texture, uLeft = column * cellU + insetU, vTop = row * cellV + insetV, uRight = (column + 1) * cellU - insetU, vBottom = (row + 1) * cellV - insetV, widthPixels = texture.width.toFloat() / columns, heightPixels = texture.height.toFloat() / rows)
     }
 
     fun row(row: Int): List<SpriteRegion> = (0 until columns).map { region(it, row) }
@@ -72,6 +62,5 @@ class SpriteSheet(
  * 같은 그림을 다시 요청하면 ResourceManager의 캐시를 사용합니다.
  */
 class SpriteSheetLoader(private val resources: ResourceManager) {
-    fun load(resourceId: Int, columns: Int, rows: Int): SpriteSheet =
-        SpriteSheet(resources.texture(resourceId), columns, rows)
+    fun load(resourceId: Int, columns: Int, rows: Int): SpriteSheet = SpriteSheet(resources.texture(resourceId), columns, rows)
 }

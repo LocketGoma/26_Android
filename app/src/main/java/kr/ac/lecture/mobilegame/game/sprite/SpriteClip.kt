@@ -14,6 +14,7 @@ class SpriteClip(
     private val looping: Boolean = true,
 ) {
     val frames = frames.toList()
+
     init {
         require(frames.size in 1..MAX_FRAMES) {
             "One animation clip must contain 1..$MAX_FRAMES frames: ${frames.size}"
@@ -22,12 +23,7 @@ class SpriteClip(
     }
 
     /** 기존 Catalog의 Frame/재생 설정을 재사용합니다. Component는 별도 재생 상태를 만듭니다. */
-    fun toAsset(name: String): SpriteAsset = SpriteAsset(
-        name, frames,
-        frames.first().widthPixels,
-        frames.first().heightPixels,
-        secondsPerFrame, looping,
-    )
+    fun toAsset(name: String): SpriteAsset = SpriteAsset(name, frames, frames.first().widthPixels, frames.first().heightPixels, secondsPerFrame, looping)
 
     companion object {
         const val MAX_FRAMES = 8

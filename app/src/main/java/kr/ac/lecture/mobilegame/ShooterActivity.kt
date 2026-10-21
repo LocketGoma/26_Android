@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
@@ -19,6 +20,8 @@ import kr.ac.lecture.mobilegame.game.GameUiSnapshot
 import kr.ac.lecture.mobilegame.game.GameUiListener
 import kr.ac.lecture.mobilegame.game.LeaderboardStore
 import kr.ac.lecture.mobilegame.game.ShooterScene
+import kr.ac.lecture.mobilegame.game.addon.WasdInputController
+import kr.ac.lecture.mobilegame.game.addon.WasdPlayer
 import kr.ac.lecture.mobilegame.game.sprite.ShootingSpriteCatalog
 import kr.ac.lecture.mobilegame.game.sprite.ItemSpriteCatalog
 import kr.ac.lecture.mobilegame.game.sprite.UiSpriteCatalog
@@ -44,14 +47,11 @@ class ShooterActivity : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         sound = SoundManager(this)
-        gameView = GameSurfaceView(this) { resources ->
-            ShooterScene(
-                ShootingSpriteCatalog.load(resources), ItemSpriteCatalog.load(resources),
-                UiSpriteCatalog.load(resources), LeaderboardStore(applicationContext),
-                GameUiListener { snapshot ->
-                    runOnUiThread { if (!isFinishing && !isDestroyed) showGameUi(snapshot) }
-                }, sound,
-            ).also { scene = it }
+        gameView = GameSurfaceView(this, input = WasdInputController()) { resources ->
+            val sprites = ShootingSpriteCatalog.load(resources)
+            ShooterScene(sprites, ItemSpriteCatalog.load(resources), UiSpriteCatalog.load(resources), LeaderboardStore(applicationContext), GameUiListener { snapshot ->
+                runOnUiThread { if (!isFinishing && !isDestroyed) showGameUi(snapshot) }
+            }, sound, player = WasdPlayer(sprites.newPlayerIdleClip())).also { scene = it }
         }
         setContentView(buildContentView())
         SampleScreen.hideSystemBars(this)
@@ -60,10 +60,7 @@ class ShooterActivity : Activity() {
     @Suppress("DEPRECATION")
     private fun buildContentView(): View {
         val root = FrameLayout(this)
-        root.addView(gameView, FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT,
-        ))
+        root.addView(gameView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
 
         menuOverlay = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -88,10 +85,7 @@ class ShooterActivity : Activity() {
             isFillViewport = true
             addView(menuOverlay)
         }
-        root.addView(menuScroll, FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT,
-        ))
+        root.addView(menuScroll, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
         SampleScreen.applyInsets(menuScroll)
 
         // 실제 아이콘과 수량은 기존 ui_sprites.png로 그립니다. 이 투명 View는 터치와 접근성만 담당합니다.
@@ -135,11 +129,7 @@ class ShooterActivity : Activity() {
         if (gameView.width <= 0 || gameView.height <= 0) return
         val top = safeTop + if (BuildConfig.DEBUG_BLOCK) dp(50) else 0
         // 폭탄 터치 영역도 그림과 같은 픽셀만큼 내려 디버그 버튼과 겹치지 않게 합니다.
-        bombTouchArea.layoutParams = FrameLayout.LayoutParams(
-            (gameView.width * 0.3f).toInt().coerceAtLeast(1),
-            (gameView.height * 0.14f).toInt().coerceAtLeast(1),
-            Gravity.TOP or Gravity.END,
-        ).apply { topMargin = top }
+        bombTouchArea.layoutParams = FrameLayout.LayoutParams((gameView.width * 0.3f).toInt().coerceAtLeast(1), (gameView.height * 0.14f).toInt().coerceAtLeast(1), Gravity.TOP or Gravity.END).apply { topMargin = top }
         command { setHudTopInset(top) }
     }
 
@@ -148,12 +138,10 @@ class ShooterActivity : Activity() {
         textSize = 18f
     }
 
-    private fun menuItemParams() = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT,
-    ).apply { setMargins(0, dp(6), 0, dp(6)) }
+    private fun menuItemParams() = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { setMargins(0, dp(6), 0, dp(6)) }
 
     private fun showGameUi(snapshot: GameUiSnapshot) {
+        if (snapshot.state != GameState.NORMAL && snapshot.state != GameState.BOSS) gameView.clearInput()
         collisionButton?.apply {
             setTextColor(if (snapshot.showCollision) Color.rgb(180, 255, 155) else Color.WHITE)
             contentDescription = getString(if (snapshot.showCollision) R.string.hide_collision else R.string.show_collision)
@@ -167,6 +155,7 @@ class ShooterActivity : Activity() {
                 bombTouchArea.visibility = View.VISIBLE
                 bombTouchArea.isEnabled = snapshot.bombs > 0
             }
+
             GameState.GAME_OVER -> showGameOverMenu(snapshot.score)
             GameState.LEADERBOARD -> showLeaderboard(snapshot.highScores)
         }
@@ -193,9 +182,7 @@ class ShooterActivity : Activity() {
     private fun showLeaderboard(scores: List<Int>) {
         menuScroll.visibility = View.VISIBLE
         bombTouchArea.visibility = View.GONE
-        val rows = if (scores.isEmpty()) getString(R.string.no_scores) else
-            scores.mapIndexed { index, score -> getString(R.string.leaderboard_row, index + 1, score) }
-                .joinToString("\n")
+        val rows = if (scores.isEmpty()) getString(R.string.no_scores) else scores.mapIndexed { index, score -> getString(R.string.leaderboard_row, index + 1, score) }.joinToString("\n")
         titleView.text = getString(R.string.leaderboard_contents, getString(R.string.leaderboard), rows)
         setButton(primaryButton, R.string.back) { command { closeLeaderboard() } }
         secondaryButton.visibility = View.GONE
@@ -210,6 +197,11 @@ class ShooterActivity : Activity() {
 
     private fun command(action: ShooterScene.() -> Unit) = gameView.runOnGameThread {
         if (::scene.isInitialized) scene.action()
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (::gameView.isInitialized && ::menuScroll.isInitialized && menuScroll.visibility != View.VISIBLE && gameView.handleKeyEvent(event)) return true
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

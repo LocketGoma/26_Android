@@ -11,6 +11,7 @@ class MeleeAttack(
         require(duration.isFinite() && duration > 0f)
         require(cooldown.isFinite() && cooldown >= duration)
     }
+
     var activeRemaining = 0f
         private set
     var cooldownRemaining = 0f
@@ -32,12 +33,11 @@ class MeleeAttack(
         cooldownRemaining = (cooldownRemaining - dt).coerceAtLeast(0f)
     }
 
-    fun bounds(x: Float, y: Float, bodyWidth: Float, bodyHeight: Float, facing: Int): Aabb =
-        Aabb.fromCenter(x + (if (facing >= 0) 1 else -1) * (bodyWidth + range) / 2f,
-            y, range, bodyHeight * 0.9f)
+    fun bounds(x: Float, y: Float, bodyWidth: Float, bodyHeight: Float, facing: Int): Aabb = Aabb.fromCenter(x + (if (facing >= 0) 1 else -1) * (bodyWidth + range) / 2f, y, range, bodyHeight * 0.9f)
 
-    fun tryHit(targetId: Int, attackBounds: Aabb, targetBounds: Aabb): Boolean =
-        active && targetId !in hitIds && attackBounds.overlaps(targetBounds) && hitIds.add(targetId)
+    fun tryHit(targetId: Int, attackBounds: Aabb, targetBounds: Aabb): Boolean = active && targetId !in hitIds && attackBounds.overlaps(targetBounds) && hitIds.add(targetId)
 
-    fun reset() { activeRemaining = 0f; cooldownRemaining = 0f; hitIds.clear() }
+    fun reset() {
+        activeRemaining = 0f; cooldownRemaining = 0f; hitIds.clear()
+    }
 }

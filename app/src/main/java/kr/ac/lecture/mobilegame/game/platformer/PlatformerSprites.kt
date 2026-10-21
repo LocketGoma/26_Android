@@ -13,6 +13,7 @@ class PlatformerSprites(private val resources: ResourceManager) {
         val sheet = SpriteSheet(resources.texture(id), 2, 2)
         return (0..3).map { FrameArt(sheet.region(it % 2, it / 2), feet[it]) }
     }
+
     val idle = frames(R.drawable.platformer_player_idle, listOf(0.92344f, 0.91866f, 0.84370f, 0.85486f))
     val run = frames(R.drawable.platformer_player_run, listOf(0.91866f, 0.91228f, 0.84370f, 0.84370f))
     val jump = frames(R.drawable.platformer_player_jump, listOf(0.92344f, 0.94099f, 0.72408f, 0.80861f))
@@ -25,6 +26,7 @@ class PlatformerSprites(private val resources: ResourceManager) {
     val apple = items.region(0, 0).crop(0.25592f, 0.15220f, 0.86246f, 0.86584f)
     val acorn = items.region(1, 0).crop(0.20857f, 0.20068f, 0.78918f, 0.88952f)
     private val platforms = SpriteSheet(resources.texture(R.drawable.platformer_platforms), 1, 2)
+
     // 발판 그림의 투명 여백을 빼서 윗면과 충돌 상단을 같은 위치에 그립니다.
     val ground = platforms.region(0, 0).crop(0.06220f, 0.52313f, 0.93780f, 0.85646f)
     val wood = platforms.region(0, 1).crop(0.06220f, 0.25997f, 0.93780f, 0.53748f)

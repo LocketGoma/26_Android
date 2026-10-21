@@ -4,6 +4,9 @@ package kr.ac.lecture.mobilegame.foundation.core
 class ObjectPool<T>(private val factory: () -> T) {
     private val available = ArrayDeque<T>()
     fun obtain(): T = available.removeLastOrNull() ?: factory()
-    fun recycle(value: T) { available.addLast(value) }
+    fun recycle(value: T) {
+        available.addLast(value)
+    }
+
     fun clear() = available.clear()
 }

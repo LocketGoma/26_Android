@@ -17,16 +17,19 @@ class Bullet(
     val owner: BulletOwner = BulletOwner.PLAYER,
 ) : GameObject(Vec2(x, y), Vec2(0.05f, 0.13f)) {
     override val fallbackColor = if (owner == BulletOwner.PLAYER) Color.YELLOW else Color.RED
+
     init {
         this.sprite = SpriteComponent(this, useObjectSize = true).apply {
-            sprite?.let { addSprite(SpriteAsset("Bullet", listOf(it),
-                it.widthPixels, it.heightPixels)) }
+            sprite?.let {
+                addSprite(SpriteAsset("Bullet", listOf(it), it.widthPixels, it.heightPixels))
+            }
         }
         collision = AABBCollisionComponent(transform, size.copy())
         val speed = if (owner == BulletOwner.PLAYER) GameConfig.BULLET_SPEED else GameConfig.ENEMY_BULLET_SPEED
         val direction = if (owner == BulletOwner.PLAYER) 1f else -1f
         movement = MovementComponent.constantVelocity(transform, 0f, speed * direction)
     }
+
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
         if (position.y > 1.1f || position.y < -1.1f) active = false

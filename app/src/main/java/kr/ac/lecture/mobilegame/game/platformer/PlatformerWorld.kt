@@ -7,17 +7,15 @@ import kr.ac.lecture.mobilegame.foundation.physics.PlatformBody
 
 enum class PlatformerState { PLAYING, DEAD, CLEARED }
 
-data class PlatformerUiSnapshot(val state: PlatformerState, val life: Int,
-                               val collected: Int, val score: Int,
-                               val followPlatform: Boolean, val showCollision: Boolean)
+data class PlatformerUiSnapshot(
+    val state: PlatformerState, val life: Int, val collected: Int, val score: Int, val followPlatform: Boolean, val showCollision: Boolean
+)
 
 /** 위치와 게임 규칙만 계산합니다. 그림, Android View, OpenGL은 이 클래스에서 사용하지 않습니다. */
 class PlatformerWorld {
     var level = PlatformerLevel()
         private set
-    val player = PlatformBody(level.checkpoints.first().x,
-        PlatformerLevel.FLOOR_TOP + PlatformerLevel.PLAYER_HEIGHT / 2f,
-        PlatformerLevel.PLAYER_WIDTH, PlatformerLevel.PLAYER_HEIGHT)
+    val player = PlatformBody(level.checkpoints.first().x, PlatformerLevel.FLOOR_TOP + PlatformerLevel.PLAYER_HEIGHT / 2f, PlatformerLevel.PLAYER_WIDTH, PlatformerLevel.PLAYER_HEIGHT)
     val motor = KinematicMotor()
     var state = PlatformerState.PLAYING
         private set
@@ -99,7 +97,9 @@ class PlatformerWorld {
 
         resolveEnemies(previousFeet)
         if (state != PlatformerState.PLAYING) return
-        if (player.feet < -1f) { die(fell = true); return }
+        if (player.feet < -1f) {
+            die(fell = true); return
+        }
         collectItems()
         if (player.supportId != null) updateCheckpoint()
         if (player.x >= PlatformerLevel.FINISH_X && player.supportId != null && player.feet < 2.5f) {
@@ -114,8 +114,7 @@ class PlatformerWorld {
             if (!enemy.alive) continue
             val head = enemy.headBounds
             val overlapsHeadX = player.x + player.width / 2f > head.left && player.x - player.width / 2f < head.right
-            if (player.velocityY <= 0f && previousFeet >= head.maxY - 0.025f &&
-                player.feet <= head.maxY && overlapsHeadX) {
+            if (player.velocityY <= 0f && previousFeet >= head.maxY - 0.025f && player.feet <= head.maxY && overlapsHeadX) {
                 enemy.stomp()
                 awardEnemy(enemy)
                 player.y = head.maxY + player.height / 2f + 0.002f
@@ -139,7 +138,9 @@ class PlatformerWorld {
         if (life <= 0) die(fell = false)
     }
 
-    private fun awardEnemy(enemy: PlatformEnemy) { score += if (enemy.kind == PlatformEnemyKind.CAT) 100 else 150 }
+    private fun awardEnemy(enemy: PlatformEnemy) {
+        score += if (enemy.kind == PlatformEnemyKind.CAT) 100 else 150
+    }
 
     private fun updateCheckpoint() {
         for (index in checkpointIndex + 1 until level.checkpoints.size) {
@@ -186,5 +187,7 @@ class PlatformerWorld {
 
     fun uiSnapshot() = PlatformerUiSnapshot(state, life, collected, score, followPlatform, showCollision)
 
-    companion object { const val MAX_STEP = 1f / 120f }
+    companion object {
+        const val MAX_STEP = 1f / 120f
+    }
 }

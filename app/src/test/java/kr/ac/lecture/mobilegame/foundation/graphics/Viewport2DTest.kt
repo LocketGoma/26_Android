@@ -4,7 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class Viewport2DTest {
-    @Test fun squareSpriteKeepsSquarePixelSizeOnPortraitScreen() {
+    @Test
+    fun squareSpriteKeepsSquarePixelSizeOnPortraitScreen() {
         val viewport = Viewport2D().apply { resize(1080, 2400) }
 
         val size = viewport.aspectCorrectedSize(worldWidth = 0.14f, widthToHeight = 1f)

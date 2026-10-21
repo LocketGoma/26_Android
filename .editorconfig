@@ -1,0 +1,14 @@
+root = true
+
+[*.{kt,kts}]
+indent_style = space
+indent_size = 4
+max_line_length = off
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+ij_kotlin_lbrace_on_next_line = false
+ij_kotlin_keep_line_breaks = false
+ij_kotlin_call_parameters_wrap = off
+ij_kotlin_call_parameters_new_line_after_left_paren = false
+ij_kotlin_call_parameters_right_paren_on_new_line = false
+ij_kotlin_allow_trailing_comma_on_call_site = false
+ij_kotlin_allow_trailing_comma_value_argument_list = false

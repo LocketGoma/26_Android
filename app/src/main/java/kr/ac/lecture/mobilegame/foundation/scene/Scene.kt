@@ -32,5 +32,6 @@ class SceneManager(initialScene: Scene) {
         this.height = height
         current.resize(width, height)
     }
+
     fun draw(renderer: Renderer2D) = current.draw(renderer)
 }

@@ -19,15 +19,8 @@ data class ItemSprites(
  */
 object ItemSpriteCatalog {
     fun load(resources: ResourceManager): ItemSprites {
-        val sheet = SpriteSheetLoader(resources).load(
-            R.drawable.item_sprites,
-            columns = 2,
-            rows = 1,
-        )
+        val sheet = SpriteSheetLoader(resources).load(R.drawable.item_sprites, columns = 2, rows = 1)
 
-        return ItemSprites(
-            healthPickup = sheet.region(column = 0, row = 0),
-            bombPickup = sheet.region(column = 1, row = 0),
-        )
+        return ItemSprites(healthPickup = sheet.region(column = 0, row = 0), bombPickup = sheet.region(column = 1, row = 0))
     }
 }

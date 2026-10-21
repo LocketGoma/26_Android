@@ -20,10 +20,13 @@ class PlatformerPainter(private val art: PlatformerSprites) {
         fun rect(x: Float, y: Float, width: Float, height: Float, color: Color) {
             renderer.drawRect(point(x, y, camera), size(width, height), color)
         }
-        fun picture(region: SpriteRegion, x: Float, y: Float, width: Float, height: Float,
-                    flip: Boolean = false, rotation: Float = 0f) {
+
+        fun picture(
+            region: SpriteRegion, x: Float, y: Float, width: Float, height: Float, flip: Boolean = false, rotation: Float = 0f
+        ) {
             renderer.drawSprite(region, point(x, y, camera), size(width, height), rotation = rotation, flipX = flip)
         }
+
         fun outline(bounds: Aabb, color: Color) {
             val width = bounds.right - bounds.left
             val height = bounds.maxY - bounds.minY
@@ -37,8 +40,7 @@ class PlatformerPainter(private val art: PlatformerSprites) {
         for (entry in world.level.surfaces) {
             val surface = entry.surface
             if (surface.right < camera || surface.left > camera + PlatformerLevel.VIEW_WIDTH) continue
-            picture(if (entry.look == SurfaceLook.GROUND) art.ground else art.wood,
-                surface.x, surface.y, surface.width, surface.height)
+            picture(if (entry.look == SurfaceLook.GROUND) art.ground else art.wood, surface.x, surface.y, surface.width, surface.height)
             if (showCollision) outline(Aabb.fromCenter(surface.x, surface.y, surface.width, surface.height), Color.WHITE)
         }
         // 다음 구역의 다시 시작할 위치를 작은 깃발로 표시합니다.
@@ -72,8 +74,7 @@ class PlatformerPainter(private val art: PlatformerSprites) {
         if (!world.blinkPlayer || world.state != PlatformerState.PLAYING) {
             val frame = playerFrame(world)
             val height = 1.3f
-            picture(frame.region, world.player.x, world.player.feet + height * (frame.feet - 0.5f),
-                height, height, world.facing < 0)
+            picture(frame.region, world.player.x, world.player.feet + height * (frame.feet - 0.5f), height, height, world.facing < 0)
         }
         if (showCollision) outline(world.player.bounds, Color(0.05f, 0.65f, 0.15f))
     }
@@ -87,12 +88,11 @@ class PlatformerPainter(private val art: PlatformerSprites) {
             world.player.velocityY > 0f -> 1
             else -> 3
         }]
+
         abs(world.player.velocityX) > 0.1f -> art.run[(world.elapsed * 10f).toInt() % art.run.size]
         else -> art.idle[(world.elapsed * 5f).toInt() % art.idle.size]
     }
 
-    private fun point(x: Float, y: Float, camera: Float) =
-        Vec2((x - camera) / PlatformerLevel.VIEW_WIDTH * 2f - 1f, y / viewHeight * 2f - 1f)
-    private fun size(width: Float, height: Float) =
-        Vec2(width / PlatformerLevel.VIEW_WIDTH * 2f, height / viewHeight * 2f)
+    private fun point(x: Float, y: Float, camera: Float) = Vec2((x - camera) / PlatformerLevel.VIEW_WIDTH * 2f - 1f, y / viewHeight * 2f - 1f)
+    private fun size(width: Float, height: Float) = Vec2(width / PlatformerLevel.VIEW_WIDTH * 2f, height / viewHeight * 2f)
 }

@@ -6,9 +6,9 @@ import kr.ac.lecture.mobilegame.foundation.input.InputSnapshot
 import kr.ac.lecture.mobilegame.foundation.scene.Scene
 
 /** 입력 읽기, 게임 계산, Android HUD 알림, 그리기를 순서대로 연결합니다. */
-class PlatformerScene(private val world: PlatformerWorld, private val controls: DigitalInput,
-                      private val painter: PlatformerPainter,
-                      private val onUiChanged: (PlatformerUiSnapshot) -> Unit) : Scene {
+class PlatformerScene(
+    private val world: PlatformerWorld, private val controls: DigitalInput, private val painter: PlatformerPainter, private val onUiChanged: (PlatformerUiSnapshot) -> Unit
+) : Scene {
     private var lastUi: PlatformerUiSnapshot? = null
     override fun onEnter() = notifyUi()
 

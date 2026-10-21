@@ -6,12 +6,7 @@ import android.content.Context
 class LeaderboardStore(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
-    fun scores(): List<Int> = preferences.getString(SCORES_KEY, "")
-        .orEmpty()
-        .split(',')
-        .mapNotNull(String::toIntOrNull)
-        .sortedDescending()
-        .take(MAX_SCORES)
+    fun scores(): List<Int> = preferences.getString(SCORES_KEY, "").orEmpty().split(',').mapNotNull(String::toIntOrNull).sortedDescending().take(MAX_SCORES)
 
     fun save(score: Int): List<Int> {
         val next = (scores() + score.coerceAtLeast(0)).sortedDescending().take(MAX_SCORES)

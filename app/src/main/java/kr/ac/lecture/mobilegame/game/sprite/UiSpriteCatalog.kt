@@ -25,23 +25,9 @@ data class UiSprites(
 /** [학생 실습/수정 영역 + 제공 샘플] UI 의미를 5×4 Sprite Sheet의 셀에 연결합니다. */
 object UiSpriteCatalog {
     fun load(resources: ResourceManager): UiSprites {
-        val sheet = SpriteSheetLoader(resources).load(
-            R.drawable.ui_sprites,
-            columns = 5,
-            rows = 4,
-        )
+        val sheet = SpriteSheetLoader(resources).load(R.drawable.ui_sprites, columns = 5, rows = 4)
         val digits = sheet.row(1) + sheet.row(2)
 
-        return UiSprites(
-            healthFull = sheet.region(column = 0, row = 0),
-            healthEmpty = sheet.region(column = 1, row = 0),
-            bombFull = sheet.region(column = 2, row = 0),
-            bombEmpty = sheet.region(column = 3, row = 0),
-            multiply = sheet.region(column = 4, row = 0),
-            digits = digits,
-            healthLabel = sheet.region(column = 0, row = 3),
-            bombLabel = sheet.region(column = 1, row = 3),
-            scoreLabel = sheet.region(column = 2, row = 3),
-        )
+        return UiSprites(healthFull = sheet.region(column = 0, row = 0), healthEmpty = sheet.region(column = 1, row = 0), bombFull = sheet.region(column = 2, row = 0), bombEmpty = sheet.region(column = 3, row = 0), multiply = sheet.region(column = 4, row = 0), digits = digits, healthLabel = sheet.region(column = 0, row = 3), bombLabel = sheet.region(column = 1, row = 3), scoreLabel = sheet.region(column = 2, row = 3))
     }
 }

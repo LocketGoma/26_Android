@@ -30,8 +30,7 @@ class GameHud(private val sprites: UiSprites?) : Hud<GameSession> {
         }
 
         renderer.drawSprite(ui.bombLabel, Vec2(0.56f, topY(0.92f)), Vec2(0.22f, 0.075f))
-        renderer.drawSprite(if (session.bombs > 0) ui.bombFull else ui.bombEmpty,
-            Vec2(0.74f, topY(0.92f)), Vec2(0.11f, 0.11f))
+        renderer.drawSprite(if (session.bombs > 0) ui.bombFull else ui.bombEmpty, Vec2(0.74f, topY(0.92f)), Vec2(0.11f, 0.11f))
         renderer.drawSprite(ui.multiply, Vec2(0.85f, topY(0.92f)), Vec2(0.075f, 0.075f))
         renderer.drawSprite(ui.digit(session.bombs), Vec2(0.94f, topY(0.92f)), Vec2(0.075f, 0.095f))
 
@@ -47,10 +46,8 @@ class GameHud(private val sprites: UiSprites?) : Hud<GameSession> {
             val tensSprite = ui.digit(tens)
             val onesSprite = ui.digit(ones)
             renderer.drawRect(Vec2(0f, topY(0.91f)), Vec2(0.31f, 0.13f), Color(0.02f, 0.03f, 0.07f, 0.88f))
-            renderer.drawSprite(tensSprite, Vec2(-0.07f, topY(0.91f)),
-                renderer.aspectCorrectedSize(tensSprite, TIMER_DIGIT_WIDTH))
-            renderer.drawSprite(onesSprite, Vec2(0.07f, topY(0.91f)),
-                renderer.aspectCorrectedSize(onesSprite, TIMER_DIGIT_WIDTH))
+            renderer.drawSprite(tensSprite, Vec2(-0.07f, topY(0.91f)), renderer.aspectCorrectedSize(tensSprite, TIMER_DIGIT_WIDTH))
+            renderer.drawSprite(onesSprite, Vec2(0.07f, topY(0.91f)), renderer.aspectCorrectedSize(onesSprite, TIMER_DIGIT_WIDTH))
         }
     }
 
@@ -63,8 +60,7 @@ class GameHud(private val sprites: UiSprites?) : Hud<GameSession> {
         maxDigits: Int,
     ) {
         value.coerceAtLeast(0).toString().takeLast(maxDigits).forEachIndexed { index, character ->
-            renderer.drawSprite(ui.digit(character.digitToInt()), Vec2(startX + index * 0.065f, y),
-                Vec2(0.055f, 0.075f))
+            renderer.drawSprite(ui.digit(character.digitToInt()), Vec2(startX + index * 0.065f, y), Vec2(0.055f, 0.075f))
         }
     }
 
@@ -72,8 +68,7 @@ class GameHud(private val sprites: UiSprites?) : Hud<GameSession> {
         if (hp == null || maxHp == null || maxHp <= 0) return
         renderer.drawRect(Vec2(0f, topY(0.69f)), Vec2(1.5f, 0.055f), Color(0.15f, 0.15f, 0.20f, 0.9f))
         val ratio = (hp.toFloat() / maxHp).coerceIn(0f, 1f)
-        if (ratio > 0f) renderer.drawRect(Vec2(-0.75f + 0.75f * ratio, topY(0.69f)),
-            Vec2(1.5f * ratio, 0.035f), Color.RED)
+        if (ratio > 0f) renderer.drawRect(Vec2(-0.75f + 0.75f * ratio, topY(0.69f)), Vec2(1.5f * ratio, 0.035f), Color.RED)
     }
 
     private fun drawFallback(renderer: Renderer2D, session: GameSession) {

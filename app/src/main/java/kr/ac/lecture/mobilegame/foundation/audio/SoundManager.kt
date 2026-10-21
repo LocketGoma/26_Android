@@ -7,8 +7,7 @@ import android.util.Log
 
 /** 별도 음원 파일이 없을 때도 즉각적인 게임 피드백을 주는 짧은 합성음입니다. */
 enum class ToneEffect(internal val toneType: Int, internal val durationMs: Int) {
-    HIT(ToneGenerator.TONE_PROP_NACK, 180),
-    BOMB(ToneGenerator.TONE_SUP_ERROR, 350),
+    HIT(ToneGenerator.TONE_PROP_NACK, 180), BOMB(ToneGenerator.TONE_SUP_ERROR, 350),
 }
 
 /** Manager가 로드한 Sound의 이름과 기본 설정입니다. Playback 상태는 Channel이 소유합니다. */
@@ -34,7 +33,11 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
         var paused = false
         var wantsPlay = false
     }
-    init { require(channelCount in 1..8) { "channelCount must be 1..8" } }
+
+    init {
+        require(channelCount in 1..8) { "channelCount must be 1..8" }
+    }
+
     private val backend = SoundPoolBackend(context.applicationContext, channelCount)
     private val toneGenerator = runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, 72) }.getOrNull()
     private val channels = Array(channelCount) { Channel() }
@@ -62,11 +65,15 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
         if (!available()) return null
         return try {
             val assetName = name ?: backend.resourceName(resourceId)
-            if (assetName.isBlank()) { warning("Sound name is blank"); return null }
+            if (assetName.isBlank()) {
+                warning("Sound name is blank"); return null
+            }
             val sample = samples[resourceId] ?: backend.load(resourceId).also {
                 if (it != 0) samples[resourceId] = it
             }
-            if (sample == 0) { warning("Sound load rejected: resource=$resourceId"); return null }
+            if (sample == 0) {
+                warning("Sound load rejected: resource=$resourceId"); return null
+            }
             SoundAsset(assetName, resourceId, clampVolume(volume), loop, sample).also { assets += it }
         } catch (error: RuntimeException) {
             warning("Cannot load sound resource=$resourceId: ${error.message}")
@@ -77,8 +84,12 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
     @Synchronized
     fun register(channelId: Int, sound: SoundAsset?): Boolean {
         val channel = channel(channelId) ?: return false
-        if (channel.sound != null) { warning("Channel $channelId is occupied; unregister first"); return false }
-        if (sound == null || sound !in assets) { warning("Sound is missing or belongs to another manager"); return false }
+        if (channel.sound != null) {
+            warning("Channel $channelId is occupied; unregister first"); return false
+        }
+        if (sound == null || sound !in assets) {
+            warning("Sound is missing or belongs to another manager"); return false
+        }
         channel.sound = sound
         return true
     }
@@ -99,7 +110,9 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
     }
 
     @Synchronized
-    fun stop(channelId: Int) { registeredChannel(channelId)?.let { stopStream(it) } }
+    fun stop(channelId: Int) {
+        registeredChannel(channelId)?.let { stopStream(it) }
+    }
 
     @Synchronized
     fun unregister(channelId: Int) {
@@ -136,7 +149,9 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
         hostPaused = true
         toneGenerator?.stopTone()
         channels.forEach {
-            if (it.streamId != 0 && !it.paused) { backend.pause(it.streamId); it.paused = true }
+            if (it.streamId != 0 && !it.paused) {
+                backend.pause(it.streamId); it.paused = true
+            }
         }
     }
 
@@ -164,13 +179,17 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
         val sound = channel.sound ?: return
         if (hostPaused) return
         val status = loadStatus[sound.sampleId] ?: return // 로딩 완료 뒤 한 번 재생합니다.
-        if (status != 0) { channel.wantsPlay = false; warning("Sound is not ready: ${sound.name}"); return }
+        if (status != 0) {
+            channel.wantsPlay = false; warning("Sound is not ready: ${sound.name}"); return
+        }
         if (channel.paused && channel.streamId != 0) {
             backend.resume(channel.streamId)
         } else {
             if (channel.streamId != 0) backend.stop(channel.streamId)
             channel.streamId = backend.play(sound.sampleId, effectiveVolume(channel), sound.loop)
-            if (channel.streamId == 0) { channel.wantsPlay = false; warning("Playback failed: ${sound.name}") }
+            if (channel.streamId == 0) {
+                channel.wantsPlay = false; warning("Playback failed: ${sound.name}")
+            }
         }
         channel.paused = false
     }
@@ -181,22 +200,33 @@ class SoundManager(context: Context, val channelCount: Int = 4) {
         channel.paused = false
         channel.wantsPlay = false
     }
+
     private fun effectiveVolume(channel: Channel) = (channel.sound?.defaultVolume ?: 0f) * channel.volume * masterVolume
     private fun applyVolume(channel: Channel) {
         if (channel.streamId != 0) backend.setVolume(channel.streamId, effectiveVolume(channel))
     }
+
     private fun available(): Boolean {
         if (released) warning("SoundManager is released")
         return !released
     }
+
     private fun channel(id: Int): Channel? {
         if (!available()) return null
-        if (id !in channels.indices) { warning("Invalid channel=$id; valid=0..${channelCount - 1}"); return null }
+        if (id !in channels.indices) {
+            warning("Invalid channel=$id; valid=0..${channelCount - 1}"); return null
+        }
         return channels[id]
     }
+
     private fun registeredChannel(id: Int): Channel? = channel(id)?.let {
-        if (it.sound == null) { warning("Channel $id has no sound"); null } else it
+        if (it.sound == null) {
+            warning("Channel $id has no sound"); null
+        } else it
     }
+
     private fun clampVolume(value: Float): Float = if (value.isNaN()) 0f else value.coerceIn(0f, 1f)
-    private fun warning(message: String) { Log.w("SoundManager", message) }
+    private fun warning(message: String) {
+        Log.w("SoundManager", message)
+    }
 }

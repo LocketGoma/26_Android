@@ -22,7 +22,9 @@ class PlatformerControlsView(context: Context, private val controls: DigitalInpu
     private var safeBottom = 0
     private var gameplayEnabled = true
 
-    init { isClickable = true }
+    init {
+        isClickable = true
+    }
 
     fun setSafeInsets(left: Int, right: Int, bottom: Int) {
         safeLeft = left; safeRight = right; safeBottom = bottom
@@ -36,7 +38,9 @@ class PlatformerControlsView(context: Context, private val controls: DigitalInpu
         invalidate()
     }
 
-    fun clearInputs() { fingers.clear(); controls.clear(); invalidate() }
+    fun clearInputs() {
+        fingers.clear(); controls.clear(); invalidate()
+    }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
@@ -50,8 +54,7 @@ class PlatformerControlsView(context: Context, private val controls: DigitalInpu
         val left = safeLeft + dp(16f)
         val right = width - safeRight - dp(16f)
         regions.getValue(GameAction.LEFT).set(left, bottom - diameter, left + diameter, bottom)
-        regions.getValue(GameAction.RIGHT).set(left + diameter + dp(12f), bottom - diameter,
-            left + diameter * 2f + dp(12f), bottom)
+        regions.getValue(GameAction.RIGHT).set(left + diameter + dp(12f), bottom - diameter, left + diameter * 2f + dp(12f), bottom)
         regions.getValue(GameAction.JUMP).set(right - diameter, bottom - diameter, right, bottom)
         invalidate()
     }
@@ -90,6 +93,7 @@ class PlatformerControlsView(context: Context, private val controls: DigitalInpu
                 if (action != null) fingers[event.getPointerId(index)] = action
                 updateHeldButtons()
             }
+
             MotionEvent.ACTION_MOVE -> {
                 val iterator = fingers.iterator()
                 while (iterator.hasNext()) {
@@ -99,11 +103,15 @@ class PlatformerControlsView(context: Context, private val controls: DigitalInpu
                 }
                 updateHeldButtons()
             }
+
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                 fingers.remove(event.getPointerId(event.actionIndex))
                 updateHeldButtons()
             }
-            MotionEvent.ACTION_CANCEL -> clearInputs()
+
+            MotionEvent.ACTION_CANCEL -> {
+                fingers.clear(); updateHeldButtons()
+            }
         }
         return true
     }

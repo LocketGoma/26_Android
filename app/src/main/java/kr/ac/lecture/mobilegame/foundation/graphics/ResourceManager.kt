@@ -34,8 +34,7 @@ class ResourceManager(private val context: Context, private val nearestFiltering
 
     private fun upload(resourceId: Int): Texture {
         // Pixel Size 기준이 기기 밀도에 따라 달라지지 않도록 자동 밀도 확대를 끕니다.
-        val bitmap = requireNotNull(BitmapFactory.decodeResource(context.resources, resourceId,
-            BitmapFactory.Options().apply { inScaled = false }))
+        val bitmap = requireNotNull(BitmapFactory.decodeResource(context.resources, resourceId, BitmapFactory.Options().apply { inScaled = false }))
         val handles = IntArray(1)
         try {
             GLES30.glGenTextures(1, handles, 0)

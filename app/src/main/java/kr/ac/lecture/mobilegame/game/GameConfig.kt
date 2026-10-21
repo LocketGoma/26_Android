@@ -27,17 +27,13 @@ object GameConfig {
     const val ELITE_ENEMY_SCORE = 50
     const val BOSS_SCORE = 1_000
 
-    fun enemyMultiplier(cycle: Int): Float =
-        1.2f.pow((cycle.coerceAtLeast(1) - 1).toFloat())
+    fun enemyMultiplier(cycle: Int): Float = 1.2f.pow((cycle.coerceAtLeast(1) - 1).toFloat())
 
-    fun normalSpawnInterval(cycle: Int): Float =
-        BASE_ENEMY_SPAWN_INTERVAL_SECONDS / enemyMultiplier(cycle)
+    fun normalSpawnInterval(cycle: Int): Float = BASE_ENEMY_SPAWN_INTERVAL_SECONDS / enemyMultiplier(cycle)
 
-    fun bossSpawnInterval(cycle: Int): Float =
-        normalSpawnInterval(cycle) / BOSS_ENEMY_RATE
+    fun bossSpawnInterval(cycle: Int): Float = normalSpawnInterval(cycle) / BOSS_ENEMY_RATE
 
-    fun bossMaxHp(cycle: Int): Int =
-        (100f * (1f + cycle.coerceAtLeast(1) * 0.1f)).toInt()
+    fun bossMaxHp(cycle: Int): Int = (100f * (1f + cycle.coerceAtLeast(1) * 0.1f)).toInt()
 
     // TODO(데이터 실습): JSON 또는 Data Asset 성격의 외부 파일로 분리합니다.
 }

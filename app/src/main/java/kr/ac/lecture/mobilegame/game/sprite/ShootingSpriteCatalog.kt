@@ -34,16 +34,6 @@ object ShootingSpriteCatalog {
         val enemies = loader.load(R.drawable.enemy_sprites, columns = 4, rows = 2)
         val playerDamage = loader.load(R.drawable.player_damage_sprites, columns = 4, rows = 2)
 
-        return ShootingSprites(
-            playerIdleFrames = player.row(0),
-            playerHitFrames = playerDamage.row(0),
-            playerDestroyedFrames = playerDamage.row(1),
-            smallEnemyFrames = enemies.row(0),
-            bomberEnemyFrames = enemies.row(1),
-            playerBullet = effects.region(column = 0, row = 0),
-            enemyBullet = effects.region(column = 0, row = 1),
-            impact = effects.row(2),
-            explosion = effects.row(3),
-        )
+        return ShootingSprites(playerIdleFrames = player.row(0), playerHitFrames = playerDamage.row(0), playerDestroyedFrames = playerDamage.row(1), smallEnemyFrames = enemies.row(0), bomberEnemyFrames = enemies.row(1), playerBullet = effects.region(column = 0, row = 0), enemyBullet = effects.region(column = 0, row = 1), impact = effects.row(2), explosion = effects.row(3))
     }
 }

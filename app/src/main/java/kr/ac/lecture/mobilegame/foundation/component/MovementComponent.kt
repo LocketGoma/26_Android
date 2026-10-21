@@ -17,11 +17,18 @@ class MovementComponent(
     deceleration: Float = 4f,
 ) {
     var maxSpeed = maxSpeed
-        set(value) { require(value.isFinite() && value >= 0f); field = value }
+        set(value) {
+            require(value.isFinite() && value >= 0f); field = value
+        }
     var acceleration = acceleration
-        set(value) { require(value.isFinite() && value >= 0f); field = value }
+        set(value) {
+            require(value.isFinite() && value >= 0f); field = value
+        }
     var deceleration = deceleration
-        set(value) { require(value.isFinite() && value >= 0f); field = value }
+        set(value) {
+            require(value.isFinite() && value >= 0f); field = value
+        }
+
     // 초기 속도를 지정하면 기존 탄환처럼 처음부터 일정한 속도로 움직일 수 있습니다.
     val velocity = Vec2()
     private val direction = Vec2()

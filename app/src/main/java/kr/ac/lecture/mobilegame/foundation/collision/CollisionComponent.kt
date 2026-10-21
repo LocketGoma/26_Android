@@ -23,13 +23,8 @@ class AABBCollisionComponent(
     val offset: Vec2 = Vec2(),
 ) : CollisionComponent {
     override val bounds: Aabb
-        get() = Aabb.fromCenter(
-            transform.position.x + offset.x * transform.scale.x,
-            transform.position.y + offset.y * transform.scale.y,
-            abs(size.x * transform.scale.x), abs(size.y * transform.scale.y),
-        )
+        get() = Aabb.fromCenter(transform.position.x + offset.x * transform.scale.x, transform.position.y + offset.y * transform.scale.y, abs(size.x * transform.scale.x), abs(size.y * transform.scale.y))
 
-    override fun intersects(other: CollisionComponent): Boolean =
-        if (other is AABBCollisionComponent) bounds.overlaps(other.bounds)
-        else other.intersects(this) // 새 Shape가 기존 AABB와의 판정을 담당합니다.
+    override fun intersects(other: CollisionComponent): Boolean = if (other is AABBCollisionComponent) bounds.overlaps(other.bounds)
+    else other.intersects(this) // 새 Shape가 기존 AABB와의 판정을 담당합니다.
 }

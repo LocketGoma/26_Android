@@ -26,7 +26,13 @@ open class SceneSurfaceView(
 
     protected open fun readInput() = InputSnapshot()
 
-    open fun onHostResume() { driver.resume(); super.onResume() }
-    open fun onHostPause() { driver.pause(); super.onPause() }
+    open fun onHostResume() {
+        driver.resume(); super.onResume()
+    }
+
+    open fun onHostPause() {
+        driver.pause(); super.onPause()
+    }
+
     fun runOnGameThread(action: () -> Unit) = queueEvent { action() }
 }

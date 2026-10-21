@@ -20,18 +20,21 @@ data class Color(val red: Float, val green: Float, val blue: Float, val alpha: F
 /** 사각형이나 그림을 OpenGL ES 3.0으로 출력합니다. 물체 이동과 게임 규칙은 계산하지 않습니다. */
 class Renderer2D {
     private val viewport = Viewport2D()
-    fun setViewport(width: Int, height: Int) { viewport.resize(width, height) }
+    fun setViewport(width: Int, height: Int) {
+        viewport.resize(width, height)
+    }
+
     fun pixelSizeToWorld(width: Float, height: Float): Vec2 = viewport.pixelSizeToWorld(width, height)
+
     /** 세로형 화면에서도 Sprite가 원본 픽셀 종횡비를 유지하도록 월드 크기를 계산합니다. */
-    fun aspectCorrectedSize(sprite: SpriteRegion, worldWidth: Float): Vec2 =
-        viewport.aspectCorrectedSize(worldWidth, sprite.widthPixels / sprite.heightPixels)
+    fun aspectCorrectedSize(sprite: SpriteRegion, worldWidth: Float): Vec2 = viewport.aspectCorrectedSize(worldWidth, sprite.widthPixels / sprite.heightPixels)
     private var program = 0
     private var colorLocation = -1
     private var useTextureLocation = -1
     private var textureLocation = -1
+
     // 사각형의 정점 6개 × (위치 2 + UV 2). 같은 버퍼를 재사용합니다.
-    private val vertices = ByteBuffer.allocateDirect(6 * 4 * Float.SIZE_BYTES)
-        .order(ByteOrder.nativeOrder()).asFloatBuffer()
+    private val vertices = ByteBuffer.allocateDirect(6 * 4 * Float.SIZE_BYTES).order(ByteOrder.nativeOrder()).asFloatBuffer()
     private val vertexShader = """
         #version 300 es
         layout(location = 0) in vec2 aPosition;
@@ -93,12 +96,7 @@ class Renderer2D {
         rotation: Float = 0f,
         flipX: Boolean = false,
     ) {
-        drawQuad(
-            center, size,
-            if (flipX) sprite.uRight else sprite.uLeft, sprite.vTop,
-            if (flipX) sprite.uLeft else sprite.uRight, sprite.vBottom,
-            tint, sprite.texture.handle, rotation,
-        )
+        drawQuad(center, size, if (flipX) sprite.uRight else sprite.uLeft, sprite.vTop, if (flipX) sprite.uLeft else sprite.uRight, sprite.vBottom, tint, sprite.texture.handle, rotation)
     }
 
     private fun drawQuad(
@@ -126,8 +124,7 @@ class Renderer2D {
 
         GLES30.glUseProgram(program)
         // 호출자는 보통의 RGBA를 전달합니다. Bitmap과 같은 premultiplied alpha로 여기서 통일합니다.
-        GLES30.glUniform4f(colorLocation, color.red * color.alpha, color.green * color.alpha,
-            color.blue * color.alpha, color.alpha)
+        GLES30.glUniform4f(colorLocation, color.red * color.alpha, color.green * color.alpha, color.blue * color.alpha, color.alpha)
         val useTexture = textureHandle != 0
         GLES30.glUniform1i(useTextureLocation, if (useTexture) 1 else 0)
         if (useTexture) {
@@ -182,6 +179,7 @@ class Viewport2D {
         this.width = width
         this.height = height
     }
+
     fun pixelSizeToWorld(width: Float, height: Float) = Vec2(width * 2f / this.width, height * 2f / this.height)
     fun aspectCorrectedSize(worldWidth: Float, widthToHeight: Float): Vec2 {
         require(worldWidth >= 0f && widthToHeight > 0f)
@@ -189,6 +187,7 @@ class Viewport2D {
         val pixelHeight = pixelWidth / widthToHeight
         return Vec2(worldWidth, pixelHeight * 2f / height)
     }
+
     fun rotateOffset(x: Float, y: Float, degrees: Float): Vec2 {
         val radians = Math.toRadians(degrees.toDouble())
         val cos = kotlin.math.cos(radians).toFloat()
